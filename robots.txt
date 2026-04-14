@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://sharmaaman07.vercel.app/sitemap.xml
+Sitemap: https://arcaman07.com/sitemap.xml
