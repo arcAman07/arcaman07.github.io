@@ -348,20 +348,6 @@
     <li>Full experiment code, prompts, per-artwork logs, and reasoning traces: <a href="https://github.com/arcAman07/llm-art-valuation" target="_blank">github.com/arcAman07/llm-art-valuation</a>.</li>
 </ol>
 
-<h3 style="margin-top:2rem;">Citation</h3>
-
-<p style="font-size:14px;">If you use any of the data, code, framing, or findings from this post in your own work, please cite:</p>
-
-<pre style="font-size:13px; background:var(--code-bg,#f5f5f5); padding:1rem; border-radius:6px; overflow-x:auto;"><code>@misc{sharma2026llmartvaluation,
-  author       = {Sharma, Aman},
-  title        = {Can Frontier {AI} Models Read a Painting?
-                  Recognition vs Commitment in Multimodal Art Valuation},
-  year         = {2026},
-  month        = apr,
-  howpublished = {Blog post, \emph{LLM Art Auctions} series (Part 1)},
-  url          = {https://arcaman07.github.io/blog/can-llms-see-art.html}
-}</code></pre>
-
 <p style="margin-top:2rem; font-size:14px;">The full codebase, experiment logs, and results are available at <a href="https://github.com/arcAman07/llm-art-valuation" target="_blank">github.com/arcAman07/llm-art-valuation</a>.</p>
 
 <h2 style="margin-top:3rem;">Appendix</h2>
@@ -477,6 +463,43 @@
 
 <p style="margin-top:1rem;">The same gate fires on at least two more paintings in the run-0 log: Rothko's Yellow Stripe (image-only $18K, metadata $48M) and Klimt's Blumenwiese (image-only $8.5M, metadata $42M). Three different art-historical periods, the same authentication-gate behavior in each. The full image-only and metadata reasoning traces for all four models on all 15 paintings are in the <a href="https://github.com/arcAman07/llm-art-valuation" target="_blank">repository</a>.</p>
 </details>
+
+<h2 style="margin-top:3rem;">Citation</h2>
+
+<p style="font-size:14px;">If you use any of the data, code, framing, or findings from this post in your own work, please cite:</p>
+
+<pre class="bibtex-cite"><code>@misc{sharma2026llmartvaluation,
+  author       = {Sharma, Aman},
+  title        = {Can Frontier {AI} Models Read a Painting?
+                  Recognition vs Commitment in Multimodal Art Valuation},
+  year         = {2026},
+  month        = apr,
+  howpublished = {Blog post, \emph{LLM Art Auctions} series (Part 1)},
+  url          = {https://arcaman07.github.io/blog/can-llms-see-art.html}
+}</code></pre>
+
+<style>
+.bibtex-cite {
+    font-size: 13px;
+    padding: 1rem 1.2rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    line-height: 1.5;
+    margin: 1rem 0 2rem 0;
+    background: rgba(127,127,127,0.08);
+    border: 1px solid rgba(127,127,127,0.25);
+    color: inherit;
+}
+.bibtex-cite code {
+    background: transparent;
+    color: inherit;
+    font-family: "SF Mono", Menlo, Consolas, Monaco, monospace;
+}
+[data-theme="dark"] .bibtex-cite {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.15);
+}
+</style>
 
 <!-- POST_CONTENT_END -->
             </div>
