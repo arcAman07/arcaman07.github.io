@@ -1,0 +1,2922 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watching the Path, Recovering the Goal: Classical Inverse RL | Aman Sharma</title>
+    <meta name="description" content="The bedrock of inverse reinforcement learning: recovering the reward and cost function behind an expert's behaviour from their demonstrations alone. A step-by-step walk through the two founding algorithms, Abbeel-Ng (2004) and MMP (2006), on a 12x12 gridworld, with interactive widgets and full derivations.">
+    <link rel="canonical" href="https://arcaman07.github.io/blog/inverse-rl-classical.html">
+    <meta property="og:title" content="Watching the Path, Recovering the Goal: Classical Inverse RL">
+    <meta property="og:description" content="The bedrock of inverse RL: recovering reward and cost functions from expert demonstrations. The two founding algorithms (Abbeel-Ng 2004, MMP 2006), traced on a 12x12 gridworld with interactive widgets.">
+    <meta property="og:type" content="article">
+    <meta property="og:image" content="https://arcaman07.github.io/assets/img/profile.jpg">
+    <meta property="og:url" content="https://arcaman07.github.io/blog/inverse-rl-classical.html">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:creator" content="@arcaman07">
+    <link rel="icon" type="image/x-icon" href="../assets/img/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/blog-post.css">
+    <link rel="stylesheet" href="../assets/css/interactive.css">
+    <style>
+        .post-lede {
+            font-size: 17px;
+            line-height: 1.75;
+            color: var(--text);
+            font-weight: 400;
+            font-style: normal !important;
+            margin: 1.5rem 0 2rem;
+            padding: 0;
+            border: 0;
+        }
+        .post-lede * { font-style: normal !important; }
+        .post-lede strong { font-weight: 600; }
+        .post-lede em { font-style: normal !important; }
+        .post-content table { font-size: 13.5px; }
+        .post-content .diagram-caption {
+            text-align: center;
+            font-size: 12.5px;
+            color: var(--text-light);
+            font-style: italic;
+            margin: -8px 0 1.5rem;
+        }
+        /* Allow centered math to scroll horizontally on narrow screens */
+        .post-content p[style*="text-align: center"] {
+            overflow-x: auto;
+            overflow-y: hidden;
+            max-width: 100%;
+        }
+        .post-content .aside p[style*="text-align: center"],
+        .post-content .note p[style*="text-align: center"] {
+            font-size: 14.5px;
+        }
+        @media (max-width: 600px) {
+            .post-content .aside p[style*="text-align: center"],
+            .post-content .note p[style*="text-align: center"] {
+                font-size: 12.5px;
+            }
+        }
+        /* Make sure MathJax SVG output doesn't overflow */
+        .post-content mjx-container[display="true"] {
+            overflow-x: auto;
+            overflow-y: hidden;
+            max-width: 100%;
+        }
+        .post-content .aside, .post-content .note {
+            overflow-x: hidden;
+        }
+        .post-content .aside p, .post-content .note p {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        /* Collapsible proof appendix */
+        .proof-box {
+            background: rgba(0,0,0,0.02);
+            border: 1px solid var(--divider);
+            border-radius: 6px;
+            margin: 1.5rem 0;
+            overflow: hidden;
+        }
+        html[data-theme="dark"] .proof-box { background: rgba(255,255,255,0.03); }
+        .proof-box summary {
+            cursor: pointer;
+            padding: 12px 18px;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--theme);
+            list-style: none;
+            user-select: none;
+            transition: background 0.15s;
+        }
+        .proof-box summary:hover { background: rgba(231,117,0,0.06); }
+        html[data-theme="dark"] .proof-box summary:hover { background: rgba(38,152,186,0.10); }
+        .proof-box summary::-webkit-details-marker { display: none; }
+        .proof-box summary::before {
+            content: "▶";
+            font-size: 10px;
+            color: var(--text-light);
+            margin-right: 8px;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+        .proof-box[open] summary::before {
+            transform: rotate(90deg);
+        }
+        .proof-box[open] summary {
+            border-bottom: 1px solid var(--divider);
+        }
+        .proof-content {
+            padding: 14px 18px 4px;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+        .proof-content h4 {
+            margin-top: 1.2rem !important;
+            margin-bottom: 0.5rem !important;
+            font-size: 13px !important;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--theme) !important;
+        }
+        .proof-content h4:first-child { margin-top: 0.3rem !important; }
+        .proof-content p { margin-bottom: 1rem; font-size: 15px !important; }
+        .proof-content .qed { float: right; font-weight: 600; color: var(--theme); }
+    </style>
+    <script>
+    window.MathJax = {
+      tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+      svg: { fontCache: 'global' }
+    };
+    </script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <script src="../assets/js/interactive.js"></script>
+</head>
+<body>
+    <div id="progress"></div>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="nav-brand">Aman Sharma</a>
+            <div style="display:flex;align-items:center;gap:0;">
+                <ul class="nav-menu" id="navMenu">
+                    <li><a href="../index.html">About</a></li>
+                    <li><a href="../blog.html" class="active">Blog</a></li>
+                    <li><a href="../publications.html">Research</a></li>
+                    <li><a href="../projects.html">Projects</a></li>
+                </ul>
+                <div class="nav-right">
+                    <button id="light-toggle" aria-label="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+                    <button class="nav-toggle" id="menuToggle" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="post-body">
+
+            <a href="../blog.html" class="back-link">
+                <i class="fa-solid fa-arrow-left" style="font-size:11px;"></i> Back to Blog
+            </a>
+
+            <div class="post-hero">
+                <div class="post-hero-meta">
+                    <span><i class="fa-solid fa-calendar" style="font-size:10px;"></i> May 26, 2026</span>
+                    <span class="sep">&middot;</span>
+                    <span><i class="fa-solid fa-clock" style="font-size:10px;"></i> 20 min read</span>
+                    <span class="sep">&middot;</span>
+                    <span><i class="fa-solid fa-file-lines" style="font-size:10px;"></i> Technical Blog Post</span>
+                </div>
+                <h1>Watching the Path, Recovering the Goal</h1>
+                <p class="post-subtitle">The bedrock of inverse reinforcement learning: recovering the reward and cost function behind an expert's behaviour, using nothing but their demonstrations. We trace the two algorithms that started it all, Abbeel-Ng (2004) and MMP (2006), step by step on a 12x12 gridworld, with interactive widgets and every derivation worked in full.</p>
+                <div class="post-tags-hero">
+                    <a href="#">inverse-rl</a>
+                    <a href="#">imitation-learning</a>
+                    <a href="#">abbeel-ng</a>
+                    <a href="#">mmp</a>
+                </div>
+            </div>
+
+            <div class="post-content">
+<p class="post-lede" style="font-style:normal !important;">
+Show me what you do, and I will tell you what you want. That is the
+bet of inverse reinforcement learning. It is also the bet behind every
+modern LLM alignment pipeline, every robot learning from human
+demonstration, and every recommendation system trying to figure out
+what users actually care about. This post is about how the field first
+learned to take that bet seriously, in 2004 and 2006, on examples
+small enough to fit in a 12×12 gridworld. We trace
+<strong>Abbeel-Ng (2004)</strong> and <strong>MMP (2006)</strong> with
+interactive widgets at every key step. The fact that took me longest
+to internalise: the cost numbers these algorithms recover are wrong,
+and that turns out to be exactly the right answer.
+</p>
+
+<div class="toc">
+<strong>Where we're going</strong>
+<ol>
+<li><a href="#question">The question we're asking</a></li>
+<li><a href="#world">A concrete world: the 12×12 gridworld</a></li>
+<li><a href="#data">What information do we actually have?</a></li>
+<li><a href="#features">The big idea: count what the expert visits</a></li>
+<li><a href="#abbeel">Apprenticeship Learning (Abbeel &amp; Ng, 2004)</a></li>
+<li><a href="#abbeel-walk">Walk-through: 5 iterations of Abbeel-Ng</a></li>
+<li><a href="#polytope">The picture that makes Abbeel-Ng click</a></li>
+<li><a href="#mmp">Maximum Margin Planning (Ratliff, Bagnell &amp; Zinkevich, 2006)</a></li>
+<li><a href="#mmp-walk">Walk-through: how MMP rewrites the cost map</a></li>
+<li><a href="#both">Both algorithms compared</a></li>
+<li><a href="#conclusion">Conclusion: two landmark papers and what they leave open</a></li>
+<li><a href="#appendix-dotproduct">Appendix A. Why w* = v / ‖v‖ maximises the dot product</a></li>
+<li><a href="#appendix-duality">Appendix B. The SVM-step / convex-hull duality (Abbeel-Ng)</a></li>
+<li><a href="#refs">References</a></li>
+</ol>
+</div>
+
+<details class="proof-box">
+<summary>Notation cheat sheet (open this before reading the math sections)</summary>
+<div class="proof-content">
+
+<p>
+Every symbol the post uses, what it stands for, and how it's
+pronounced. The post is consistent about these, but the first
+appearance of each can come without warning.
+</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>symbol</th><th>pronounced</th><th>meaning</th></tr></thead>
+<tbody>
+<tr><td>$s$</td><td>"s"</td><td>a state, i.e. one cell of the gridworld</td></tr>
+<tr><td>$a$</td><td>"a"</td><td>an action (N, E, S, W, or L, R depending on the example)</td></tr>
+<tr><td>$\xi$</td><td>"xi" (Greek)</td><td>a trajectory, a sequence of states the agent visits</td></tr>
+<tr><td>$\xi_E$</td><td>"xi sub E"</td><td>the <strong>expert's</strong> trajectory (the one we observe)</td></tr>
+<tr><td>$\xi^*$</td><td>"xi star"</td><td>the worst-violator trajectory in MMP (output of loss-augmented planner)</td></tr>
+<tr><td>$\pi$</td><td>"pi"</td><td>a policy (a mapping from states to actions)</td></tr>
+<tr><td>$\phi(s)$</td><td>"phi of s"</td><td>per-state feature vector. In the gridworld this is a one-hot indicator over terrain types: grass / road / sand / water / mountain</td></tr>
+<tr><td>$f(\xi)$</td><td>"f of xi"</td><td>feature counts of trajectory $\xi$, equal to $\sum_{s \in \xi} \phi(s)$. The histogram of terrains the path visits. Also called the <em>feature expectation</em></td></tr>
+<tr><td>$f_E$</td><td>"f sub E"</td><td>shorthand for $f(\xi_E)$, the expert's feature counts</td></tr>
+<tr><td>$f^*$</td><td>"f star"</td><td>shorthand for $f(\xi^*)$, the worst violator's feature counts</td></tr>
+<tr><td>$w$</td><td>"w"</td><td>weight vector. Same length as $\phi(s)$. Interpreted as <strong>cost</strong> weights in MMP (higher = more expensive) and as <strong>reward</strong> weights in Abbeel-Ng (higher = preferred)</td></tr>
+<tr><td>$c(s)$</td><td>"c of s"</td><td>cost of being in state $s$ under current weights, computed as $c(s) = w \cdot \phi(s)$</td></tr>
+<tr><td>$L(s)$</td><td>"L of s"</td><td>per-state Hamming loss. Equals 1 if $s$ is NOT on the expert path, 0 if it IS</td></tr>
+<tr><td>$\ell(\xi)$</td><td>"script L of xi"</td><td>total Hamming loss along path $\xi$, equal to $\sum_{s \in \xi} L(s)$. The number of non-expert cells the path visits</td></tr>
+<tr><td>$c'(s)$</td><td>"c prime of s"</td><td>loss-augmented cost, $c'(s) = c(s) - L(s)$. Non-expert cells get a 1-unit discount</td></tr>
+<tr><td>$\eta$</td><td>"eta" (Greek)</td><td>step size / learning rate</td></tr>
+<tr><td>$\zeta$</td><td>"zeta" (Greek)</td><td>slack variable in the soft-margin MMP optimisation</td></tr>
+<tr><td>$\lambda$</td><td>"lambda" (Greek)</td><td>used twice (sorry): mixing weights in Abbeel-Ng's final policy mixture, and Lagrange multipliers in the proofs</td></tr>
+<tr><td>$t$</td><td>"t"</td><td>timestep within an episode</td></tr>
+<tr><td>$T$</td><td>"T"</td><td>horizon length of the episode</td></tr>
+<tr><td>$V_t(s)$</td><td>"V sub t of s"</td><td>value function at time $t$ in state $s$, the expected return going forward</td></tr>
+<tr><td>$Q_t(s, a)$</td><td>"Q sub t of s, a"</td><td>action-value at time $t$, expected return if you take action $a$ in state $s$ and then act optimally</td></tr>
+<tr><td>$\|w\|$</td><td>"norm of w"</td><td>Euclidean length: $\|w\| = \sqrt{w_1^2 + w_2^2 + \cdots}$</td></tr>
+<tr><td>$w \cdot v$</td><td>"w dot v"</td><td>dot product of two vectors: $w_1 v_1 + w_2 v_2 + \cdots$</td></tr>
+</tbody></table></div>
+
+<p>
+<strong>Cost vs reward sign convention.</strong> Abbeel-Ng treats $w$ as
+reward weights (the expert maximises $w \cdot \phi$). MMP treats $w$ as
+cost weights with $w \geq 0$ (the expert minimises $w \cdot \phi$). The
+math is the same up to a sign flip, but the literature uses both, and
+the post follows whichever paper a given section is explaining. Within a
+section the convention is consistent.
+</p>
+
+</div>
+</details>
+
+<!-- ============================================================ -->
+<h2 id="question">The question we're asking</h2>
+
+<p>
+You're watching an expert do a task. You can see <em>what</em> they do
+but not <em>why</em>. You'd like to behave like them.
+</p>
+
+<p>
+The straightforward approach, <strong>behavioural cloning</strong>,
+just memorises "when in state $s$, take action $a$" and replays it.
+The problem with that: the moment you find yourself in a state the
+expert never showed you, you have no idea what to do. Errors compound.
+You drive off the road.
+</p>
+
+<p>
+<strong>Inverse RL</strong> bets that there's a more compact answer.
+The expert has some <em>preferences</em>, they like roads, they avoid
+puddles, they care about reaching the destination. If we can recover
+those preferences, then in any new situation we can <em>re-derive</em>
+the right action by planning. That's the dream.
+</p>
+
+<p>The two algorithms in this post:</p>
+
+<ul>
+<li><strong>Abbeel-Ng (2004)</strong>, "I'll find a policy that
+spends the same amount of time on each type of terrain as the expert.
+I won't bother recovering the preferences themselves."</li>
+<li><strong>MMP (2006)</strong>, "I'll directly tune a cost vector so
+that the expert's exact route is the cheapest one. Then I have a cost
+function I can use in new environments."</li>
+</ul>
+
+<p>Both work. They're useful for different reasons.</p>
+
+<!-- ============================================================ -->
+<h2 id="world">A concrete world</h2>
+
+<p>
+Here's the 12×12 gridworld we'll use as a running example. Each cell
+is a terrain type. The expert starts at the black dot, wants to reach
+the gold star. Walking on each terrain has a <em>cost</em>:
+</p>
+
+<div class="widget" id="w-expert-gridworld">
+  <div class="widget-header">
+    <div class="widget-title">The expert's path · animated</div>
+    <span class="widget-badge interactive">Interactive</span>
+  </div>
+  <div class="widget-body">
+    <div class="widget-row center">
+      <svg class="interactive" viewBox="0 0 320 320" width="320" height="320">
+        <rect width="320" height="320" fill="#fff"/>
+        <script type="application/json" id="terrain-data">[
+          [0,0,0,0,0,0,0,0,0,0,0,0],
+          [0,1,1,1,1,1,1,0,0,0,0,0],
+          [0,0,4,0,0,0,1,3,4,4,4,0],
+          [0,0,4,0,0,0,1,3,0,0,0,0],
+          [0,0,4,0,0,0,1,3,0,0,0,0],
+          [0,0,0,0,0,0,1,1,1,1,1,0],
+          [0,0,2,0,0,0,0,0,0,0,1,0],
+          [0,0,2,2,0,0,0,0,0,0,1,0],
+          [0,0,0,2,0,0,3,3,0,0,1,0],
+          [0,0,0,0,4,4,3,0,0,0,1,0],
+          [0,0,0,0,4,0,0,0,0,0,1,1],
+          [0,0,0,0,0,0,0,0,0,0,0,0]
+        ]</script>
+        <g id="grid-cells"></g>
+        <g id="path-overlay"></g>
+        <g id="path-dot"></g>
+      </svg>
+    </div>
+    <div class="controls" style="justify-content: center">
+      <button class="btn" id="grid-play">▶ Animate</button>
+      <button class="btn secondary" id="grid-reset">Reset</button>
+      <span class="status-strip"><span class="pill">step <b id="grid-step">0 / 22</b></span><span class="pill">terrain <b id="grid-terrain">grass</b></span></span>
+    </div>
+    <div class="legend">
+      <span><i style="background:#9ddb83"></i>grass</span>
+      <span><i style="background:#d6d6d6"></i>road</span>
+      <span><i style="background:#f3e2a9"></i>sand</span>
+      <span><i style="background:#82bdf0"></i>water</span>
+      <span><i style="background:#7c5e3f"></i>mountain</span>
+    </div>
+  </div>
+</div>
+<div class="diagram-caption">
+The red line is what the expert actually does. It hugs the grey road
+all the way around. Why? Because road is cheap. But you don't know that
+, you just see the line. Click <strong>Animate</strong> to watch the expert walk step-by-step.
+</div>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Terrain</th><th>Colour</th><th>True cost (hidden from you)</th></tr></thead>
+<tbody>
+<tr><td>grass</td><td style="background: #9ddb83">&nbsp;&nbsp;</td><td>1.0</td></tr>
+<tr><td>road</td><td style="background: #d6d6d6">&nbsp;&nbsp;</td><td>0.2</td></tr>
+<tr><td>sand</td><td style="background: #f3e2a9">&nbsp;&nbsp;</td><td>2.0</td></tr>
+<tr><td>water</td><td style="background: #82bdf0">&nbsp;&nbsp;</td><td>5.0</td></tr>
+<tr><td>mountain</td><td style="background: #7c5e3f">&nbsp;&nbsp;</td><td>8.0</td></tr>
+</tbody>
+</table></div>
+
+<p>
+The expert takes a 23-step path, mostly on the road. We, the IRL
+researchers, get to see the path. We don't see the cost table. Our
+job is to recover something useful from that path alone.
+</p>
+
+<!-- ============================================================ -->
+<h2 id="data">What information do we actually have?</h2>
+
+<p>
+This is the part beginners stumble on, so let me be explicit. We have:
+</p>
+
+<ul>
+<li><strong>The map.</strong> Which cell is which terrain. We can see
+the grid.</li>
+<li><strong>The rules.</strong> Move N/E/S/W; bumping a wall keeps you
+in place.</li>
+<li><strong>The expert's path.</strong> A sequence of 23 cells from
+start to goal.</li>
+</ul>
+
+<p>We do <em>not</em> have:</p>
+
+<ul>
+<li>The cost table.</li>
+<li>Any signal about whether the expert was happy or sad at each step.</li>
+<li>Any "preferences" the expert might confess if asked.</li>
+</ul>
+
+<p>That's it. Now we need a strategy.</p>
+
+<!-- ============================================================ -->
+<h2 id="features">The big idea: count what the expert visits</h2>
+
+<p>
+Here's the move that makes IRL tractable. Instead of asking "what's
+the expert's reward function?", which has infinitely many answers,
+we ask <strong>"what kinds of cells does the expert visit?"</strong>
+</p>
+
+<p>For our gridworld:</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Terrain</th><th>Cells the expert visits</th></tr></thead>
+<tbody>
+<tr><td>grass</td><td>2</td></tr>
+<tr><td>road</td><td>20</td></tr>
+<tr><td>sand</td><td>0</td></tr>
+<tr><td>water</td><td>0</td></tr>
+<tr><td>mountain</td><td>0</td></tr>
+</tbody>
+</table></div>
+
+<p>
+Call this vector $f_E = (2, 20, 0, 0, 0)$. It's called the
+<strong>feature expectation</strong>, basically a histogram of terrain
+types along the expert's path.
+</p>
+
+<p>
+Why does this help? Because <em>any</em> policy that produces the same
+histogram will look just as good as the expert under any cost function
+that depends only on terrain. Think about it: if the cost of a path is
+$\text{cost}(\text{path}) = w_{\text{grass}} \cdot \#\text{grass} + w_{\text{road}} \cdot \#\text{road} + \ldots$
+, a sum over terrain visits, then matching the histogram matches the
+cost <em>no matter what the weights are</em>.
+</p>
+
+<div class="note">
+<strong>The trick in one sentence:</strong> if the cost is a linear
+function of terrain-visit counts, then matching the expert's visit
+counts gives expert-equivalent cost <em>regardless of what the
+weights are</em>. We don't need to know the weights to imitate the
+expert.
+</div>
+
+<p>
+This is the foundational observation behind both algorithms. They
+differ in <em>how</em> they find a policy whose visit counts match
+$f_E$.
+</p>
+
+<!-- ============================================================ -->
+<h2 id="abbeel">Apprenticeship Learning (Abbeel &amp; Ng, 2004)</h2>
+
+<p>
+The first classical IRL algorithm is <strong>Apprenticeship Learning
+via Inverse Reinforcement Learning</strong>, from Abbeel and Ng's 2004
+ICML paper. The community usually calls it just "Abbeel-Ng." Its
+slogan: <em>match the expert's visit counts</em>. The full procedure
+is a guessing game with four steps.
+</p>
+
+<ol>
+<li>Start with any policy (a random one is fine) and compute its terrain-visit histogram.</li>
+<li>Compare the histogram to the expert's. Find the direction in feature space along which the expert beats this candidate the most.</li>
+<li>Plan a new policy that performs well in that direction. Add the new policy to your collection.</li>
+<li>Repeat. Stop when some mixture of the policies you have collected reproduces the expert's histogram exactly.</li>
+</ol>
+
+<p>
+The "mixture" in step 4 is a probability distribution over your
+collected policies. If you follow policy $\pi_1$ with probability
+$\lambda_1$ and $\pi_2$ with probability $\lambda_2$, your average
+visit counts come out to $\lambda_1 f_1 + \lambda_2 f_2$. The
+algorithm's job, at the end, is to find the $\lambda$ values that make
+this average equal the expert's $f_E$.
+</p>
+
+<p>
+Step 2 is the clever bit. We solve a small optimisation problem: find
+a unit vector $w$ such that the inner product $w \cdot (f_E - f_j)$ is
+positive and as large as possible for every candidate $f_j$ collected
+so far. This $w$ is the "opinion" that best distinguishes the expert
+from our candidates. We then plan a new policy that is optimal under
+$w$ treated as a reward function. The new policy's visit counts will
+be large in the direction $w$, which closes the gap to the expert.
+</p>
+
+<p>
+Step 2 is sometimes called the "SVM step." The reason: it is exactly
+the support-vector-machine problem with the expert as one class and
+the candidates as the other. The name does not matter for the
+intuition. All we need is a direction that distinguishes "where the
+expert spends time" from "where our candidates do."
+</p>
+
+<!-- ============================================================ -->
+<h2 id="abbeel-walk">Walk-through: 5 iterations of Abbeel-Ng</h2>
+
+<p>
+Here's what actually happens when you run the algorithm on our
+gridworld. The expert's histogram is $f_E = (2, 20, 0, 0, 0)$, heavy
+on road, light on grass, nothing on the rest.
+</p>
+
+<h3>Iteration 0, a random policy</h3>
+
+<p>
+We start with a totally random policy. It wanders, bumping into walls
+and crossing whatever's in front of it. Over a 60-step horizon, its
+visit counts come out around $f_0 = (5, 0, 0, 0, 55)$. The 5 grass
+steps happen near the start; then the agent drifts into the mountain
+band and gets stuck for the remaining 55 steps (every action from a
+mountain cell leads back to a mountain neighbour in this setup). The
+counts sum to $5 + 0 + 0 + 0 + 55 = 60$, the full horizon.
+</p>
+
+<p>
+The histogram is completely wrong. The algorithm now asks: "in what
+direction does the expert outscore this random policy most?"
+</p>
+
+<p>
+Answer: $w \approx (-0.05, +0.34, 0, 0, -0.94)$. Reading this: "the
+expert visits grass <em>slightly less</em> than the random policy, road
+<em>much more</em>, and mountain <em>much less</em>." The load-bearing
+signal is the mountain component: the random policy got stuck there,
+the expert never went, so $w$ tells the next planner "whatever you do,
+do not go to the mountain."
+</p>
+
+<div class="aside">
+<h4>Where do those weight numbers actually come from?</h4>
+
+<p>
+The "find a direction" step is a small optimization problem. Stated
+cleanly, with the candidates we have so far being $\{f_0\}$:
+</p>
+
+<p style="text-align: center; font-size: 17px; margin: 16px 0">
+$\max_{w,\, t} \ t \quad \text{subject to} \quad w \cdot (f_E - f_0) \geq t, \quad \|w\| \leq 1.$
+</p>
+
+<p>
+Read this in plain English: find a unit-norm direction $w$ such that
+the expert beats the candidate (under $w$ as cost weights) by margin at
+least $t$, and make $t$ as large as possible.
+</p>
+
+<p>
+<strong>When there is only one candidate, the closed-form solution is
+easy.</strong> By Cauchy-Schwarz, $w \cdot v \leq \|w\| \cdot \|v\|$
+with equality when $w$ points in the direction of $v$. So the optimal
+$w$ is just the unit vector in the $f_E - f_0$ direction (see
+<a href="#appendix-dotproduct">Appendix A</a> for three proofs of this):
+</p>
+
+<p style="text-align: center; font-size: 17px; margin: 16px 0">
+$w^* = \dfrac{f_E - f_0}{\|f_E - f_0\|}, \quad t^* = \|f_E - f_0\|.$
+</p>
+
+<p>Plugging in the numbers. First the difference vector:</p>
+
+<p style="text-align: center; font-size: 15.5px">
+$f_E - f_0 = (2,\ 20,\ 0,\ 0,\ 0) - (5,\ 0,\ 0,\ 0,\ 55)$
+</p>
+<p style="text-align: center; font-size: 15.5px; margin: 4px 0 14px">
+$= (-3,\ 20,\ 0,\ 0,\ -55)$
+</p>
+
+<p>Then the norm:</p>
+
+<p style="text-align: center; font-size: 15.5px">
+$\|f_E - f_0\| = \sqrt{9 + 400 + 0 + 0 + 3025}$
+</p>
+<p style="text-align: center; font-size: 15.5px; margin: 4px 0 14px">
+$= \sqrt{3434} \approx 58.60$
+</p>
+
+<p>Then the normalised direction:</p>
+
+<p style="text-align: center; font-size: 15.5px">
+$w^* = \dfrac{(-3,\ 20,\ 0,\ 0,\ -55)}{58.60}$
+</p>
+<p style="text-align: center; font-size: 15.5px; margin: 4px 0 14px">
+$\approx (-0.051,\ 0.341,\ 0,\ 0,\ -0.939)$
+</p>
+
+<p>
+Each component of $w$ literally tells you "how much, per unit, does the
+expert exceed the candidate on this terrain, normalised so that the
+whole vector has length 1." The largest-magnitude component is mountain
+at $-0.94$, because the random policy spent 55 steps on mountain and
+the expert spent 0. The grass component is a small negative number
+($-0.05$) because the random policy spent 5 steps on grass and the
+expert only spent 2. Road has a moderate positive component ($+0.34$)
+because the expert spent 20 steps there and the random policy spent
+none. Sand and water are exactly 0 because both the expert and the
+random policy visited them zero times, so there is no signal in those
+dimensions.
+</p>
+
+<p>
+<strong>When there are multiple candidates, the closed form goes
+away.</strong> Suppose by iteration $k$ we have candidates
+$\{f_0, f_1, \ldots, f_{k-1}\}$. The optimization becomes:
+</p>
+
+<p style="text-align: center; font-size: 17px; margin: 16px 0">
+$\max_{w,\, t} \ t \quad \text{subject to} \quad w \cdot (f_E - f_j) \geq t \ \text{ for } j = 0, \ldots, k-1, \quad \|w\| \leq 1.$
+</p>
+
+<p>
+This is a quadratic program with $k$ linear constraints and one
+quadratic constraint (the unit-norm). You hand it to your favourite QP
+solver (CVXPY, scipy.optimize.minimize with method='SLSQP', or in
+production a specialised SVM solver). The geometric solution is
+elegant: $w$ ends up pointing from the closest point on the convex hull
+of $\{f_0, \ldots, f_{k-1}\}$ toward $f_E$. We <a href="#trustme">prove
+this</a> in the appendix at the end of the post.
+</p>
+</div>
+
+<div class="note">
+<h4 style="margin-top:0">What is the dot product actually computing?</h4>
+<p>
+This is the question worth pausing on. Why is $w \cdot (f_E - f_j)$ the
+right quantity to maximize? Three views, all saying the same thing.
+</p>
+
+<p>
+<strong>View 1, as a reward gap.</strong> Recall that with linear
+features the reward of a trajectory is $\text{reward}(\xi) = w \cdot
+f(\xi)$, and the expected reward of a policy is $J(\pi, w) = w \cdot
+f(\pi)$. So:
+</p>
+
+<p style="text-align: center; font-size: 16px; margin: 12px 0">
+$w \cdot (f_E - f_j) \ = \ w \cdot f_E - w \cdot f_j \ = \ J(\pi_E, w) - J(\pi_j, w).$
+</p>
+
+<p>
+That is the <em>gap</em> in expected reward between the expert and
+candidate $j$ when the cost is $w$. Maximizing this gap over $w$ means:
+"find weights under which the expert clearly outperforms the
+candidate."
+</p>
+
+<p>
+<strong>View 2, as a projection.</strong> The dot product $w \cdot v$
+is the length of $v$ projected onto the unit direction $w$. So $w \cdot
+(f_E - f_j)$ is the length of the "expert minus candidate" vector
+projected onto $w$. We want the direction $w$ that makes this
+projection as long as possible for every candidate simultaneously. The
+solution is the direction that aligns best with all the difference
+vectors at once, which geometrically is the direction pointing from the
+convex hull of candidates toward the expert.
+</p>
+
+<p>
+<strong>View 3, as a classifier.</strong> The optimization is exactly
+the support-vector-machine problem with the expert as the single
+positive example and the candidates as negative examples. The hyperplane
+with normal vector $w$ separates "expert-like feature vectors" from
+"candidate-like feature vectors" with maximum margin. That is why the
+algorithm is sometimes called the SVM step.
+</p>
+
+<p>
+All three views agree on what $w$ is and how to compute it. They
+disagree only on which kind of mathematician finds them most natural.
+</p>
+</div>
+
+<h3>Iteration 1, first informed policy</h3>
+
+<p>
+We plan a policy optimal under that $w$ as reward. The result wanders
+toward grass and road (because $w$ says grass has negative reward,
+so the planner avoids it, but mountain has even more negative reward,
+so it really avoids mountain). The new histogram comes out
+$f_1 = (38, 18, 0, 0, 0)$, heavy on both grass and road, no
+mountain. Closer to the expert, but the grass count is way too high.
+</p>
+
+<p>The algorithm finds the new direction that distinguishes $f_E = (2, 20, 0, 0, 0)$ from this $f_1$ and from the random $f_0$. Now both candidates have $f_3 = 0$ (no water) but $f_E$ also has zero water, so water doesn't matter yet. The direction it finds penalises grass even more heavily.</p>
+
+<h3>Iterations 2, 3, exploring the polytope</h3>
+
+<p>The algorithm continues. Each iteration adds a new vertex to its collection. The visit counts at iterations 2 and 3 are:</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>iter</th><th>grass</th><th>road</th><th>sand</th><th>water</th><th>mountain</th></tr></thead>
+<tbody>
+<tr><td>expert</td><td>2</td><td>20</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>0 (random)</td><td>5</td><td>0</td><td>0</td><td>0</td><td>55</td></tr>
+<tr><td>1</td><td>38</td><td>18</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>2</td><td>30</td><td>13</td><td>13</td><td>0</td><td>0</td></tr>
+<tr><td>3</td><td>22</td><td>15</td><td>8</td><td>9</td><td>0</td></tr>
+<tr><td>4</td><td><strong>2</strong></td><td><strong>20</strong></td><td><strong>0</strong></td><td><strong>0</strong></td><td><strong>0</strong></td></tr>
+</tbody></table></div>
+
+<h3>Iteration 4, the expert's policy emerges</h3>
+
+<p>
+At iteration 4 something nice happens: the policy the planner produces
+has histogram $(2, 20, 0, 0, 0)$, <strong>identical to the
+expert's</strong>. The algorithm checks: "is the expert still beating
+my candidates by a margin in some direction?" The answer is no. Mix
+of weights = 100% on iteration 4's policy. Done.
+</p>
+
+<p>
+The whole thing took 5 iterations. The output is a policy whose visit
+counts are identical to the expert's, which means it has the same
+cost-on-average no matter what cost function you write down. Mission
+accomplished.
+</p>
+
+
+
+<!-- ============================================================ -->
+<details class="proof-box" id="worked-an">
+<summary>Fully worked numerical example: Abbeel-Ng on a 5-state corridor (click to expand)</summary>
+<div class="proof-content">
+<p>
+The 12×12 trace earlier in the post showed the punchline numbers but
+skipped <em>how</em> they were computed. Let me work through every
+arithmetic step on a tiny example so you can see exactly what the
+algorithm is doing under the hood.
+</p>
+
+<h3>The MDP</h3>
+
+<p>Five states in a line, numbered 0 through 4:</p>
+
+<svg class="diagram" viewBox="0 0 510 130" width="100%" style="max-width: 510px">
+  <g font-size="14" font-family="sans-serif">
+    <!-- 5 cells -->
+    <rect x="10" y="20" width="90" height="80" fill="#9ddb83" stroke="#555"/>
+    <text x="55" y="50" text-anchor="middle" font-weight="bold">0 (S)</text>
+    <text x="55" y="68" text-anchor="middle" font-size="12">grass</text>
+    <text x="55" y="85" text-anchor="middle" font-size="11" fill="#444">r=−1</text>
+
+    <rect x="100" y="20" width="90" height="80" fill="#d6d6d6" stroke="#555"/>
+    <text x="145" y="50" text-anchor="middle" font-weight="bold">1</text>
+    <text x="145" y="68" text-anchor="middle" font-size="12">road</text>
+    <text x="145" y="85" text-anchor="middle" font-size="11" fill="#444">r=−0.2</text>
+
+    <rect x="190" y="20" width="90" height="80" fill="#d6d6d6" stroke="#555"/>
+    <text x="235" y="50" text-anchor="middle" font-weight="bold">2</text>
+    <text x="235" y="68" text-anchor="middle" font-size="12">road</text>
+    <text x="235" y="85" text-anchor="middle" font-size="11" fill="#444">r=−0.2</text>
+
+    <rect x="280" y="20" width="90" height="80" fill="#d6d6d6" stroke="#555"/>
+    <text x="325" y="50" text-anchor="middle" font-weight="bold">3</text>
+    <text x="325" y="68" text-anchor="middle" font-size="12">road</text>
+    <text x="325" y="85" text-anchor="middle" font-size="11" fill="#444">r=−0.2</text>
+
+    <rect x="370" y="20" width="90" height="80" fill="gold" stroke="#555"/>
+    <text x="415" y="50" text-anchor="middle" font-weight="bold">4 (G)</text>
+    <text x="415" y="68" text-anchor="middle" font-size="12">goal</text>
+    <text x="415" y="85" text-anchor="middle" font-size="11" fill="#444">r=0</text>
+  </g>
+</svg>
+
+<ul>
+<li><strong>Two actions:</strong> L (left), R (right). Bumping a wall keeps you in place.</li>
+<li><strong>Feature map $\phi$:</strong> 2-dim. $\phi(\text{grass}) = (1, 0)$, $\phi(\text{road}) = (0, 1)$, $\phi(\text{goal}) = (0, 0)$.</li>
+<li><strong>True reward weights:</strong> $w_{\text{true}} = -(1, 0.2)$ giving the per-state rewards above. We don't know these.</li>
+<li><strong>Horizon:</strong> $T = 5$ steps.</li>
+</ul>
+
+<h3>Step 1 · Compute the expert's path via finite-horizon value iteration</h3>
+
+<p>
+The expert knows $w_{\text{true}}$ and plans optimally. We do
+backward induction with $V_5(s) = 0$ for all $s$ (game over at time $T$).
+At each prior timestep, the Bellman backup is
+</p>
+
+<p style="text-align: center">
+$Q_t(s, a) = r(s) + V_{t+1}(\text{next}(s, a))$, &nbsp;&nbsp; $V_t(s) = \max_a Q_t(s, a)$.
+</p>
+
+<p><strong>Step backward: $t = 4$ (one action remaining).</strong></p>
+
+<p>With $V_5 = 0$ everywhere, both actions from any state give $Q_4(s, a) = r(s)$. So:</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>state $s$</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4 (goal)</th></tr></thead>
+<tbody>
+<tr><td>$V_4(s)$</td><td>−1</td><td>−0.2</td><td>−0.2</td><td>−0.2</td><td>0</td></tr>
+</tbody>
+</table></div>
+
+<p><strong>$t = 3$ (two actions remaining).</strong></p>
+
+<p>From state 0, L bumps the wall → stays at 0 (so $Q_3(0, L) = r(0) + V_4(0) = -1 + (-1) = -2$). R moves to state 1 ($Q_3(0, R) = -1 + (-0.2) = -1.2$). Pick R.</p>
+
+<p>From state 1, L → state 0 ($-0.2 - 1 = -1.2$). R → state 2 ($-0.2 - 0.2 = -0.4$). Pick R.</p>
+
+<p>Continuing for every state:</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>state</th><th>$Q_3(s, L)$</th><th>$Q_3(s, R)$</th><th>$V_3(s)$</th><th>$\pi_3(s)$</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>−1 + V₄(0) = −2</td><td>−1 + V₄(1) = −1.2</td><td><strong>−1.2</strong></td><td>R</td></tr>
+<tr><td>1</td><td>−0.2 + V₄(0) = −1.2</td><td>−0.2 + V₄(2) = −0.4</td><td><strong>−0.4</strong></td><td>R</td></tr>
+<tr><td>2</td><td>−0.2 + V₄(1) = −0.4</td><td>−0.2 + V₄(3) = −0.4</td><td><strong>−0.4</strong></td><td>tied</td></tr>
+<tr><td>3</td><td>−0.2 + V₄(2) = −0.4</td><td>−0.2 + V₄(4) = −0.2</td><td><strong>−0.2</strong></td><td>R</td></tr>
+<tr><td>4</td><td colspan="2">absorbing</td><td><strong>0</strong></td><td>,</td></tr>
+</tbody></table></div>
+
+<p><strong>$t = 2, 1, 0$.</strong> Keep applying the same Bellman backup, each time using the previous row's $V$. The final result:</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th></th><th>$V_4$</th><th>$V_3$</th><th>$V_2$</th><th>$V_1$</th><th>$V_0$</th></tr></thead>
+<tbody>
+<tr><td>state 0</td><td>−1</td><td>−1.2</td><td>−1.4</td><td>−1.6</td><td><strong>−1.6</strong></td></tr>
+<tr><td>state 1</td><td>−0.2</td><td>−0.4</td><td>−0.6</td><td>−0.6</td><td>−0.6</td></tr>
+<tr><td>state 2</td><td>−0.2</td><td>−0.4</td><td>−0.4</td><td>−0.4</td><td>−0.4</td></tr>
+<tr><td>state 3</td><td>−0.2</td><td>−0.2</td><td>−0.2</td><td>−0.2</td><td>−0.2</td></tr>
+<tr><td>state 4</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+</tbody></table></div>
+
+<p>The optimal policy at every timestep (from each state, take R) gives the expert's path:</p>
+
+<p style="text-align: center; font-size: 17px">
+$t=0$: state 0 → $t=1$: state 1 → $t=2$: state 2 → $t=3$: state 3 → $t=4$: state 4 (goal)
+</p>
+
+<p>Total expert reward: $r(0) + r(1) + r(2) + r(3) + 0 = -1 - 0.2 - 0.2 - 0.2 + 0 = -1.6$ ✓ (matches $V_0(0)$).</p>
+
+<h3>Step 2 · Compute the expert's feature expectation $f_E$</h3>
+
+<p>Sum $\phi(s_t)$ along the path:</p>
+
+<p style="text-align: center">
+$f_E = \phi(0) + \phi(1) + \phi(2) + \phi(3) + \phi(4) = (1,0) + (0,1) + (0,1) + (0,1) + (0,0) = \mathbf{(1, 3)}$
+</p>
+
+<p><strong>The expert spends 1 step on grass and 3 steps on road.</strong> That's all the IRL algorithm gets to see, this 2-dim vector, the only "summary" of the demonstrations.</p>
+
+<h3>Step 3 · Abbeel-Ng iteration 0, a random policy</h3>
+
+<p>Start with any policy. Pick the worst one possible: "always L." From state 0, this bumps the wall every step, the agent never leaves state 0.</p>
+
+<p>Trajectory: states 0, 0, 0, 0, 0 (over $t=0..4$).<br>
+Feature expectation: $f_0 = 5 \phi(0) = \mathbf{(5, 0)}$. All 5 steps on grass, none on road.</p>
+
+<h3>Step 4 · Iteration 1, find a separating direction</h3>
+
+<p>We want a unit vector $w$ that distinguishes the expert from our candidate $f_0 = (5, 0)$. Solve:</p>
+
+<p style="text-align: center">
+$\max\;t\quad\text{s.t.}\quad w \cdot (f_E - f_0) \geq t, \quad \|w\| \leq 1.$
+</p>
+
+<p>Compute $f_E - f_0 = (1, 3) - (5, 0) = (-4, 3)$.</p>
+
+<p>The optimal $w$ for "maximise $w \cdot v$ with $\|w\| \leq 1$" is just $v / \|v\|$:</p>
+
+<p style="text-align: center">
+$w_1 = \frac{(-4, 3)}{\|(-4, 3)\|} = \frac{(-4, 3)}{\sqrt{16+9}} = \frac{(-4, 3)}{5} = \mathbf{(-0.8, +0.6)}$
+</p>
+
+<p>Margin: $t_1 = \|(-4, 3)\| = \mathbf{5.0}$.</p>
+
+<p><em>Reading $w_1$:</em> the expert weighs grass <em>negatively</em> (−0.8) and road <em>positively</em> (+0.6). Roughly correct: the expert prefers road and avoids grass.</p>
+
+<h3>Step 5 · Plan an optimal policy under $w_1$</h3>
+
+<p>Treat $w_1$ as the new reward weights: $r(s) = w_1 \cdot \phi(s)$, giving</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>state</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th></tr></thead>
+<tbody>
+<tr><td>$r$ under $w_1$</td><td>−0.8</td><td>+0.6</td><td>+0.6</td><td>+0.6</td><td>0</td></tr>
+</tbody>
+</table></div>
+
+<p><strong>Notice:</strong> road now gives <em>positive</em> reward, so the agent will want to <em>stay on the road as long as possible</em>. Goal still gives 0, actually less attractive than road!</p>
+
+<p>Running VI again with these new rewards, the optimal policy turns out to be:</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>at state →</th><th>0</th><th>1</th><th>2</th><th>3</th></tr></thead>
+<tbody>
+<tr><td>$\pi_1$ action (most timesteps)</td><td>R</td><td>R</td><td>R (tied)</td><td><strong>L</strong></td></tr>
+</tbody></table></div>
+
+<p>The action at state 3 flips from "R (reach goal)" to "<strong>L (back to road)</strong>." Goal-reaching costs +0 but road gives +0.6, the agent prefers the road. Trajectory:</p>
+
+<p style="text-align: center; font-size: 16px">
+state 0 → 1 → 2 → 3 → (L) 2 → end of horizon
+</p>
+
+<p>Feature counts of this candidate policy: states visited are 0, 1, 2, 3, 2 (one of state 2 twice because we bounced back).</p>
+
+<p style="text-align: center">
+$f_1 = \phi(0) + \phi(1) + \phi(2) + \phi(3) + \phi(2) = (1, 0) + 4 \cdot (0, 1) = \mathbf{(1, 4)}$
+</p>
+
+<p>Compare with the expert $f_E = (1, 3)$. Grass count matches; road count is 1 too high.</p>
+
+<h3>Step 6 · Iteration 2, find a new separating direction</h3>
+
+<p>Now we have two candidates: $f_0 = (5, 0)$ and $f_1 = (1, 4)$. The optimization is:</p>
+
+<p style="text-align: center">
+$\max\;t\quad\text{s.t.}\quad w \cdot (f_E - f_0) \geq t,\;\; w \cdot (f_E - f_1) \geq t,\;\; \|w\| \leq 1.$
+</p>
+
+<p>The two difference vectors:</p>
+<ul>
+<li>$v_0 = f_E - f_0 = (1, 3) - (5, 0) = \mathbf{(-4, 3)}$. "From all-grass toward the expert, go down on grass, up on road."</li>
+<li>$v_1 = f_E - f_1 = (1, 3) - (1, 4) = \mathbf{(0, -1)}$. "From too-much-road toward the expert, cut the road count."</li>
+</ul>
+
+<p>
+The single-candidate trick (just normalise $f_E - f_0$) no longer works,
+because the resulting $w$ would have positive margin on $v_0$ but
+negative margin on $v_1$. We need a $w$ that beats <em>both</em> at
+once. Solve the system directly.
+</p>
+
+<p><strong>Setup.</strong> At the optimum, both constraints are tight, otherwise we could rotate $w$ toward the slack constraint and gain margin. So:</p>
+
+<p style="text-align: center; font-size: 15.5px">
+$w \cdot v_0 = t \quad\text{and}\quad w \cdot v_1 = t \quad\text{and}\quad \|w\|^2 = 1.$
+</p>
+
+<p>Let $w = (w_1, w_2)$. Plug the two vectors in:</p>
+
+<p style="text-align: center; font-size: 15.5px">
+$-4 w_1 + 3 w_2 = t \qquad (1)$
+</p>
+<p style="text-align: center; font-size: 15.5px; margin: 4px 0 14px">
+$-w_2 = t \qquad (2)$
+</p>
+
+<p>Substituting (2) into (1):</p>
+
+<p style="text-align: center; font-size: 15.5px">
+$-4 w_1 + 3 w_2 = -w_2 \;\Longrightarrow\; -4 w_1 + 4 w_2 = 0 \;\Longrightarrow\; w_1 = w_2.$
+</p>
+
+<p>Use the norm constraint:</p>
+
+<p style="text-align: center; font-size: 15.5px">
+$w_1^2 + w_2^2 = 1 \;\Longrightarrow\; 2 w_1^2 = 1 \;\Longrightarrow\; w_1 = \pm \tfrac{1}{\sqrt 2}.$
+</p>
+
+<p>
+Pick the sign that gives positive margin. From (2), $t = -w_2$, so for
+$t > 0$ we need $w_2 < 0$. That forces both components negative:
+</p>
+
+<p style="text-align: center; font-size: 15.5px">
+$w_2 = \left(-\tfrac{1}{\sqrt 2},\ -\tfrac{1}{\sqrt 2}\right) \approx \mathbf{(-0.707,\ -0.707)}, \quad t_2 = \tfrac{1}{\sqrt 2} \approx \mathbf{0.707}.$
+</p>
+
+<p><strong>Verify both constraints:</strong></p>
+
+<ul>
+<li>$w_2 \cdot v_0 = (-0.707)(-4) + (-0.707)(3) = 2.828 - 2.121 = 0.707$ ✓</li>
+<li>$w_2 \cdot v_1 = (-0.707)(0) + (-0.707)(-1) = 0 + 0.707 = 0.707$ ✓</li>
+<li>$\|w_2\| = \sqrt{0.707^2 + 0.707^2} = \sqrt{0.5 + 0.5} = 1$ ✓</li>
+</ul>
+
+<p>Both constraints are tight at margin $0.707$, and $w_2$ is unit norm. This is the solution.</p>
+
+<p><em>Reading $w_2$:</em> grass weight is $-0.707$, road weight is also $-0.707$. The algorithm has decided that <em>both</em> grass and road should be penalised equally. With every non-goal step costing $-0.707$ no matter what terrain, the only way to maximise return is to <em>reach the goal as fast as possible</em>. So the next planner will care only about path length, not about which terrain it walks on.</p>
+
+<h3>Step 7 · Plan an optimal policy under $w_2$</h3>
+
+<p>The updated per-state rewards are $r(s) = w_2 \cdot \phi(s)$:</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>state</th><th>terrain</th><th>$\phi(s)$</th><th>$r(s) = w_2 \cdot \phi(s)$</th></tr></thead>
+<tbody>
+<tr><td>0 (start)</td><td>grass</td><td>$(1, 0)$</td><td>$-0.707$</td></tr>
+<tr><td>1</td><td>road</td><td>$(0, 1)$</td><td>$-0.707$</td></tr>
+<tr><td>2</td><td>road</td><td>$(0, 1)$</td><td>$-0.707$</td></tr>
+<tr><td>3</td><td>road</td><td>$(0, 1)$</td><td>$-0.707$</td></tr>
+<tr><td>4 (goal)</td><td>goal</td><td>$(0, 0)$</td><td>$0$</td></tr>
+</tbody></table></div>
+
+<p>
+Every non-goal step pays $-0.707$. The goal pays $0$. So the agent
+wants to reach the goal in as few steps as possible. Now run
+finite-horizon VI with these rewards. As before, $V_5(s) = 0$ for all
+$s$, and we work backward.
+</p>
+
+<p><strong>$t = 4$:</strong> $V_4(s) = r(s) + V_5(\text{next}(s, a))$ for any action; since $V_5 = 0$, $V_4(s) = r(s)$.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>state</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th></tr></thead>
+<tbody>
+<tr><td>$V_4(s)$</td><td>$-0.707$</td><td>$-0.707$</td><td>$-0.707$</td><td>$-0.707$</td><td>$0$</td></tr>
+</tbody></table></div>
+
+<p><strong>$t = 3$:</strong> $Q_3(s, a) = r(s) + V_4(\text{next}(s, a))$.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>state</th><th>$Q_3(s, L)$</th><th>$Q_3(s, R)$</th><th>$V_3(s)$</th><th>best action</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>$-0.707 + V_4(0) = -1.414$</td><td>$-0.707 + V_4(1) = -1.414$</td><td>$-1.414$</td><td>tied</td></tr>
+<tr><td>1</td><td>$-0.707 + V_4(0) = -1.414$</td><td>$-0.707 + V_4(2) = -1.414$</td><td>$-1.414$</td><td>tied</td></tr>
+<tr><td>2</td><td>$-0.707 + V_4(1) = -1.414$</td><td>$-0.707 + V_4(3) = -1.414$</td><td>$-1.414$</td><td>tied</td></tr>
+<tr><td>3</td><td>$-0.707 + V_4(2) = -1.414$</td><td>$-0.707 + V_4(4) = -0.707$</td><td>$\mathbf{-0.707}$</td><td><strong>R</strong></td></tr>
+<tr><td>4</td><td colspan="2">absorbing</td><td>$0$</td><td>,</td></tr>
+</tbody></table></div>
+
+<p>At state 3 with one step left to go, the agent strongly prefers <strong>R</strong> (which reaches the goal) over <strong>L</strong> (which keeps it on road). Everywhere else, both actions stay in non-goal cells, so the Q-values tie.</p>
+
+<p><strong>$t = 2$:</strong> use $V_3$ from above.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>state</th><th>$Q_2(s, L)$</th><th>$Q_2(s, R)$</th><th>$V_2(s)$</th><th>best action</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>$-0.707 + V_3(0) = -2.121$</td><td>$-0.707 + V_3(1) = -2.121$</td><td>$-2.121$</td><td>tied</td></tr>
+<tr><td>1</td><td>$-0.707 + V_3(0) = -2.121$</td><td>$-0.707 + V_3(2) = -2.121$</td><td>$-2.121$</td><td>tied</td></tr>
+<tr><td>2</td><td>$-0.707 + V_3(1) = -2.121$</td><td>$-0.707 + V_3(3) = -1.414$</td><td>$\mathbf{-1.414}$</td><td><strong>R</strong></td></tr>
+<tr><td>3</td><td>$-0.707 + V_3(2) = -2.121$</td><td>$-0.707 + V_3(4) = -0.707$</td><td>$\mathbf{-0.707}$</td><td><strong>R</strong></td></tr>
+</tbody></table></div>
+
+<p>The advantage of R propagates back. Now at state 2 with two steps left, going R lets the agent reach the goal one step later, saving one $-0.707$ cost.</p>
+
+<p><strong>$t = 1, 0$:</strong> the same backup. By the time we reach $t = 0$, every state strictly prefers R (the path to the goal is shorter the further right you start). The final value table:</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th></th><th>$V_4$</th><th>$V_3$</th><th>$V_2$</th><th>$V_1$</th><th>$V_0$</th></tr></thead>
+<tbody>
+<tr><td>state 0</td><td>$-0.707$</td><td>$-1.414$</td><td>$-2.121$</td><td>$-2.828$</td><td>$\mathbf{-2.828}$</td></tr>
+<tr><td>state 1</td><td>$-0.707$</td><td>$-1.414$</td><td>$-2.121$</td><td>$-2.121$</td><td>$-2.121$</td></tr>
+<tr><td>state 2</td><td>$-0.707$</td><td>$-1.414$</td><td>$-1.414$</td><td>$-1.414$</td><td>$-1.414$</td></tr>
+<tr><td>state 3</td><td>$-0.707$</td><td>$-0.707$</td><td>$-0.707$</td><td>$-0.707$</td><td>$-0.707$</td></tr>
+<tr><td>state 4</td><td>$0$</td><td>$0$</td><td>$0$</td><td>$0$</td><td>$0$</td></tr>
+</tbody></table></div>
+
+<p>The optimal policy is "always go R" from any non-goal state (ties broken toward R since both ties lead to identical states and R is the path to goal). Starting from state 0 at $t = 0$:</p>
+
+<p style="text-align: center; font-size: 16px">
+$t=0$: state 0 $\to$ $t=1$: state 1 $\to$ $t=2$: state 2 $\to$ $t=3$: state 3 $\to$ $t=4$: state 4 (goal)
+</p>
+
+<p>Total return: $-0.707 \times 4 + 0 = -2.828$ ✓ (matches $V_0(0)$).</p>
+
+<p>Feature counts:</p>
+<p style="text-align: center; font-size: 15.5px">
+$f_2 = \phi(0) + \phi(1) + \phi(2) + \phi(3) + \phi(4)$
+</p>
+<p style="text-align: center; font-size: 15.5px; margin: 4px 0 14px">
+$= (1, 0) + (0, 1) + (0, 1) + (0, 1) + (0, 0) = \mathbf{(1, 3)} = f_E.$
+</p>
+
+<p><strong>The algorithm has matched the expert exactly.</strong> 🎉 The 5-state corridor is solved in 2 iterations.</p>
+
+<h3>Step 8 · Convergence check</h3>
+
+<p>At iteration 3, the SVM would try to find a direction in which $f_E$ outscores all candidates $\{f_0, f_1, f_2\}$. But $f_E = f_2$, so $f_E - f_2 = (0, 0)$. The SVM's margin is 0. We stop.</p>
+
+<p>The output is a mixture over $\{\pi_0, \pi_1, \pi_2\}$ with weights $\lambda$ chosen to match $f_E$. Since $f_2 = f_E$ already, $\lambda = (0, 0, 1)$, just use $\pi_2$.</p>
+
+<div class="note">
+<strong>The story in 7 numbers:</strong>
+$f_0 = (5, 0)$ → $w_1 = (-0.8, +0.6)$, margin 5 → $f_1 = (1, 4)$ → $w_2 = (-0.707, -0.707)$, margin 0.707 → $f_2 = (1, 3) = f_E$ → margin 0 → done.
+</div>
+
+<h3>What the final policy mixture looks like</h3>
+
+<p>
+Abbeel-Ng's output isn't a single policy, it's a <em>mixture</em> over
+all the candidate policies the algorithm planned along the way.
+After convergence the algorithm picks mixing weights
+$\lambda = (\lambda_0, \lambda_1, \lambda_2)$ such that
+$\lambda_0 \, f_0 + \lambda_1 \, f_1 + \lambda_2 \, f_2 = f_E$. Here's
+the table of candidates and their mixture weights:
+</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>policy</th><th>optimal under</th><th>trajectory</th><th>$f = (\text{grass}, \text{road})$</th><th>mixing weight $\lambda$</th></tr></thead>
+<tbody>
+<tr><td>$\pi_0$</td><td>"always L" (a deliberately bad init)</td><td>$0 \to 0 \to 0 \to 0 \to 0$ (bumps wall)</td><td>$(5, 0)$</td><td>$0$</td></tr>
+<tr><td>$\pi_1$</td><td>$w_1 = (-0.8, +0.6)$</td><td>$0 \to 1 \to 2 \to 3 \to 2$ (loops back, road is too rewarding)</td><td>$(1, 4)$</td><td>$0$</td></tr>
+<tr><td>$\pi_2$</td><td>$w_2 = (-0.707, -0.707)$</td><td>$0 \to 1 \to 2 \to 3 \to 4$ (matches expert)</td><td>$(1, 3) = f_E$</td><td><strong>$1$</strong></td></tr>
+</tbody></table></div>
+
+<p>
+The mixture is "put all the weight on $\pi_2$." So the final returned
+policy is just $\pi_2$ itself: at every state, take $R$. This happened
+because $f_2 = f_E$ exactly, no convex combination of the earlier
+candidates was needed.
+</p>
+
+<p>
+In a less convenient example, $f_E$ might not be a vertex of the
+polytope; it might sit in the interior. Then the algorithm would return
+something like $\lambda = (0, 0.3, 0.7)$, meaning "with probability 0.3
+follow $\pi_1$, with probability 0.7 follow $\pi_2$." Each episode you
+flip the coin once at the start and commit to one policy for the whole
+trajectory. The resulting feature counts, averaged over episodes, equal
+$f_E$.
+</p>
+
+<h3>Side-by-side comparison against the expert</h3>
+
+<div class="table-wrap"><table>
+<thead><tr><th>quantity</th><th>true (hidden)</th><th>recovered by Abbeel-Ng</th><th>match?</th></tr></thead>
+<tbody>
+<tr><td>reward weights $w$</td><td>$(-1, -0.2)$</td><td>$(-0.707, -0.707)$</td><td><strong>No</strong>, different magnitudes</td></tr>
+<tr><td>policy at $t=0$, state 0</td><td>$R$</td><td>$R$</td><td>Yes</td></tr>
+<tr><td>policy at $t=0$, state 1</td><td>$R$</td><td>$R$</td><td>Yes</td></tr>
+<tr><td>policy at $t=0$, state 2</td><td>$R$</td><td>$R$</td><td>Yes</td></tr>
+<tr><td>policy at $t=0$, state 3</td><td>$R$</td><td>$R$</td><td>Yes</td></tr>
+<tr><td>trajectory from state 0</td><td>$0 \to 1 \to 2 \to 3 \to 4$</td><td>$0 \to 1 \to 2 \to 3 \to 4$</td><td>Yes</td></tr>
+<tr><td>feature counts $(f_{\text{grass}}, f_{\text{road}})$</td><td>$(1, 3)$</td><td>$(1, 3)$</td><td>Yes</td></tr>
+</tbody></table></div>
+
+<p>
+Read the table top to bottom. The recovered <em>weights</em>
+$w_2 = (-0.707, -0.707)$ do not match the true weights $w_{\text{true}}
+= (-1, -0.2)$. They don't even have the same magnitude pattern (the
+true weights say "road is much cheaper than grass," the recovered
+weights say "grass and road cost the same"). But the recovered
+<em>policy</em> matches the expert's exactly: at every state, take
+$R$. The trajectory matches. The feature counts match.
+</p>
+
+<div class="note">
+<strong>This is the philosophical point of Abbeel-Ng.</strong> The
+algorithm doesn't promise to recover the true cost. It promises that
+the policy you get out behaves like the expert. On the 5-state
+corridor, that's enough. (On a new map where the cost weights would
+need to transfer, this would not be enough; that's where MMP
+shines.)
+</p>
+</div>
+
+<div class="widget" id="w-an-stepper">
+  <div class="widget-header">
+    <div class="widget-title">Abbeel-Ng on the 5-state corridor · step through it</div>
+    <span class="widget-badge interactive">Interactive</span>
+  </div>
+  <div class="widget-body">
+    <div class="widget-row">
+      <div class="widget-stage">
+        <svg class="interactive" id="an-corridor" viewBox="0 0 460 110" width="100%" style="max-width:520px">
+          <g id="an-cells"></g>
+          <g id="an-traj"></g>
+        </svg>
+        <svg class="interactive barchart" id="an-bars" viewBox="0 0 460 170" width="100%" style="max-width:520px; margin-top:10px"></svg>
+      </div>
+      <div class="widget-side">
+        <div class="controls">
+          <button class="btn" id="an-step">Iteration 0 (start)</button>
+          <button class="btn secondary" id="an-back">Back</button>
+          <button class="btn ghost" id="an-reset">Reset</button>
+        </div>
+        <div class="status-strip" style="margin-top:10px;flex-direction:column;gap:6px">
+          <span class="pill">iter <b id="an-iter">0</b> of 2</span>
+          <span class="pill">candidate visits <b id="an-fcur">(5, 0)</b></span>
+          <span class="pill">expert visits <b id="an-fexp">(1, 3)</b></span>
+          <span class="pill">found direction w <b id="an-w">,</b></span>
+          <span class="pill">margin <b id="an-margin">,</b></span>
+        </div>
+        <p id="an-explain" style="font-size:13.5px;color:#333;margin-top:12px;min-height:80px"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const cellsG = document.getElementById('an-cells');
+  const trajG = document.getElementById('an-traj');
+  const N = 5, CELL = 80, H = 60, X0 = 30, Y0 = 20;
+  const terrainColor = ['#9ddb83', '#d6d6d6', '#d6d6d6', '#d6d6d6', 'gold'];
+  const terrainName = ['grass', 'road', 'road', 'road', 'goal'];
+  for (let s = 0; s < N; s++) {
+    IRL.svgEl('rect', {
+      x: X0 + s*CELL, y: Y0, width: CELL-4, height: H,
+      fill: terrainColor[s], stroke: '#555'
+    }, cellsG);
+    IRL.svgEl('text', {
+      x: X0 + s*CELL + (CELL-4)/2, y: Y0 + 26, 'font-size':13, 'font-weight':600, 'text-anchor':'middle'
+    }, cellsG).textContent = `state ${s}${s===0?' (S)':s===4?' (G)':''}`;
+    IRL.svgEl('text', {
+      x: X0 + s*CELL + (CELL-4)/2, y: Y0 + 44, 'font-size':11, 'text-anchor':'middle', fill:'#444'
+    }, cellsG).textContent = terrainName[s];
+  }
+
+  // iteration data baked from the post's worked example
+  const iters = [
+    { trajectory: [0,0,0,0,0], f: [5, 0], w: null, margin: null,
+      title: 'Iteration 0: a deliberately bad policy "always L".',
+      explain: 'The policy bumps the wall every step, so it sits at state 0 the whole time. Feature counts: 5 grass, 0 road. The algorithm needs to find a direction in which the expert beats this candidate.' },
+    { trajectory: [0,1,2,3,2], f: [1, 4], w: [-0.8, 0.6], margin: 5.0,
+      title: 'Iteration 1: plan optimally under w_1 = (-0.8, +0.6).',
+      explain: 'w_1 weighs grass negatively and road positively, so the planner stays on the road as long as possible. The policy now visits grass once and road four times. Better, but road count is 1 too high.' },
+    { trajectory: [0,1,2,3,4], f: [1, 3], w: [-0.707, -0.707], margin: 0.707,
+      title: 'Iteration 2: w_2 penalises both grass and road equally.',
+      explain: 'With both terrains equally bad per step, the only thing left is to reach the goal fast. The new policy walks straight to the goal. Feature counts (1, 3) equal the expert exactly. Done.' }
+  ];
+  const expert = [1, 3];
+
+  let i = 0;
+  function render() {
+    const it = iters[i];
+    // draw trajectory arrows
+    IRL.clear(trajG);
+    const seen = {};
+    for (let t = 0; t < it.trajectory.length - 1; t++) {
+      const s = it.trajectory[t], s2 = it.trajectory[t+1];
+      const xc1 = X0 + s*CELL + (CELL-4)/2;
+      const xc2 = X0 + s2*CELL + (CELL-4)/2;
+      const yc = Y0 + H + 18 + (seen[s] || 0) * 5;
+      seen[s] = (seen[s] || 0) + 1;
+      if (s === s2) {
+        IRL.svgEl('text', { x: xc1, y: yc, 'font-size':11, 'text-anchor':'middle', fill:'#d23a3a' }, trajG).textContent = '↻';
+      } else {
+        IRL.svgEl('path', {
+          d: `M${xc1} ${yc} L${xc2} ${yc}`,
+          stroke: '#d23a3a', 'stroke-width': 2.2, fill:'none', 'marker-end':'url(#an-arrow)'
+        }, trajG);
+      }
+    }
+    // arrow marker (once)
+    if (!document.getElementById('an-arrow')) {
+      const defs = IRL.svgEl('defs', {}, document.getElementById('an-corridor'));
+      const m = IRL.svgEl('marker', { id:'an-arrow', viewBox:'0 0 10 10', refX:8, refY:5, markerWidth:6, markerHeight:6, orient:'auto-start-reverse' }, defs);
+      IRL.svgEl('path', { d:'M0,0 L10,5 L0,10 z', fill:'#d23a3a' }, m);
+    }
+    // bars: candidate vs expert
+    IRL.drawBars(document.getElementById('an-bars'), {
+      values: it.f, target: expert,
+      labels: ['grass', 'road'], colors: ['#9ddb83', '#bbb'],
+      yMax: 6, width: 460, height: 170
+    });
+    document.getElementById('an-iter').textContent = i;
+    document.getElementById('an-fcur').textContent = `(${it.f[0]}, ${it.f[1]})`;
+    document.getElementById('an-w').textContent = it.w ? `(${it.w[0].toFixed(2)}, ${it.w[1].toFixed(2)})` : ',';
+    document.getElementById('an-margin').textContent = it.margin !== null ? it.margin.toFixed(2) : ',';
+    document.getElementById('an-explain').innerHTML = `<strong>${it.title}</strong><br>${it.explain}`;
+    document.getElementById('an-step').textContent = i >= iters.length - 1 ? 'Converged' : `Iteration ${i+1}`;
+    document.getElementById('an-step').disabled = i >= iters.length - 1;
+    document.getElementById('an-back').disabled = i === 0;
+  }
+  document.getElementById('an-step').addEventListener('click', () => { if (i < iters.length - 1) { i++; render(); } });
+  document.getElementById('an-back').addEventListener('click', () => { if (i > 0) { i--; render(); } });
+  document.getElementById('an-reset').addEventListener('click', () => { i = 0; render(); });
+  render();
+})();
+</script>
+</div>
+</details>
+
+<!-- ============================================================ -->
+<h2 id="polytope">The picture that makes Abbeel-Ng click</h2>
+
+<p>
+The mental model that makes everything snap together: think of each
+candidate's visit-count vector as a <em>point</em> in 5-dimensional
+space. The set of all achievable visit counts (over all possible
+policies) is a convex shape, a "polytope." The expert's $f_E$ is
+somewhere inside this polytope.
+</p>
+
+<p>
+Each iteration of Abbeel-Ng adds a new vertex of this polytope to our
+collection. After enough vertices, the expert is inside the
+<em>convex hull</em> of what we've collected, and so a mix of those
+policies hits the expert's histogram exactly.
+</p>
+
+<p>The picture (in 2D, for illustration):</p>
+
+<svg class="diagram" viewBox="0 0 520 360" width="100%" style="max-width: 560px">
+  <rect width="520" height="360" fill="#ffffff"/>
+  <line x1="40" y1="320" x2="500" y2="320" stroke="#888" stroke-width="1"/>
+  <line x1="40" y1="40"  x2="40"  y2="320" stroke="#888" stroke-width="1"/>
+  <text x="488" y="338" font-size="13" fill="#666">visits of feature 1</text>
+  <text x="20"  y="50"  font-size="13" fill="#666">feature 2</text>
+  <polygon points="120,280 90,170 180,90 290,140 250,260"
+           fill="#cfe5ff" fill-opacity="0.55" stroke="#3a6dd2" stroke-width="1.5"/>
+  <circle cx="120" cy="280" r="5" fill="white" stroke="#3a6dd2" stroke-width="2"/>
+  <circle cx="90"  cy="170" r="5" fill="white" stroke="#3a6dd2" stroke-width="2"/>
+  <circle cx="180" cy="90"  r="5" fill="white" stroke="#3a6dd2" stroke-width="2"/>
+  <circle cx="290" cy="140" r="5" fill="white" stroke="#3a6dd2" stroke-width="2"/>
+  <circle cx="250" cy="260" r="5" fill="white" stroke="#3a6dd2" stroke-width="2"/>
+  <text x="65"  y="290" font-size="13" fill="#3a6dd2">$f_0$ random</text>
+  <text x="50"  y="167" font-size="13" fill="#3a6dd2">$f_1$</text>
+  <text x="165" y="80"  font-size="13" fill="#3a6dd2">$f_2$</text>
+  <text x="296" y="135" font-size="13" fill="#3a6dd2">$f_3$</text>
+  <text x="260" y="262" font-size="13" fill="#3a6dd2">$f_4$</text>
+  <polygon points="220,180 226,198 246,198 230,210 236,230 220,218 204,230 210,210 194,198 214,198"
+           fill="gold" stroke="black" stroke-width="1.5"/>
+  <text x="234" y="200" font-size="14" font-weight="bold" fill="#222">$f_E$</text>
+</svg>
+<div class="diagram-caption">
+Each blue dot is a policy. The shaded blob is the polytope of
+achievable visit counts. The gold star is the expert. Abbeel-Ng works
+by discovering vertices of the blue blob one at a time, until the
+expert's star is inside.
+</div>
+
+<p>
+The interactive widget below shows exactly this picture, with you
+driving the iterations forward. Highly recommended, it builds a feel
+for what the algorithm is doing that no amount of math will.
+</p>
+
+<div class="widget" id="w-polytope">
+  <div class="widget-header">
+    <div class="widget-title">Stretch the hull · interactive Abbeel-Ng in 2D</div>
+    <span class="widget-badge interactive">Interactive</span>
+  </div>
+  <div class="widget-body">
+    <div class="widget-row">
+      <div class="widget-stage">
+        <svg class="interactive" id="poly-svg" viewBox="0 0 460 360" width="100%" style="max-width:480px">
+          <rect width="460" height="360" fill="#fff"/>
+          <g id="poly-axes"></g>
+          <g id="poly-hull"></g>
+          <g id="poly-vertices"></g>
+          <g id="poly-projection"></g>
+          <g id="poly-expert"></g>
+        </svg>
+      </div>
+      <div class="widget-side">
+        <div class="controls">
+          <button class="btn" id="poly-step">Add next vertex</button>
+          <button class="btn secondary" id="poly-reset">Reset</button>
+        </div>
+        <div class="status-strip" style="margin-top:10px">
+          <span class="pill">vertices <b id="poly-k">0</b> / 5</span>
+          <span class="pill">distance to expert <b id="poly-d">,</b></span>
+        </div>
+        <p style="font-size:13.5px;color:#444;margin-top:12px">
+          Each click runs one Abbeel-Ng iteration: find the direction in which
+          the expert (gold star) outscores the current hull most, then plan a new
+          policy along that direction. Its visit-count vector becomes a new
+          vertex (blue dot). The dashed red line is the current distance from
+          the expert to the closest point on the hull; the algorithm
+          stops when that distance hits zero.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const svg = document.getElementById('poly-svg');
+  const axesG = document.getElementById('poly-axes');
+  const hullG = document.getElementById('poly-hull');
+  const vertsG = document.getElementById('poly-vertices');
+  const projG = document.getElementById('poly-projection');
+  const expertG = document.getElementById('poly-expert');
+  const W = 460, H = 360;
+  const padL = 50, padR = 28, padT = 30, padB = 50;
+  // domain: x in [0,50], y in [0,40]
+  const xDom = [0, 50], yDom = [0, 40];
+  const X = v => padL + (v - xDom[0]) / (xDom[1] - xDom[0]) * (W - padL - padR);
+  const Y = v => H - padB - (v - yDom[0]) / (yDom[1] - yDom[0]) * (H - padT - padB);
+  // axes
+  IRL.svgEl('line', { x1: padL, y1: H-padB, x2: W-padR, y2: H-padB, stroke: '#888' }, axesG);
+  IRL.svgEl('line', { x1: padL, y1: padT, x2: padL, y2: H-padB, stroke: '#888' }, axesG);
+  IRL.svgEl('text', { x: W-padR+2, y: H-padB+16, 'font-size':12, fill:'#666', 'text-anchor':'end' }, axesG).textContent = 'visits of grass';
+  const yLab = IRL.svgEl('text', { x: padL-30, y: padT+4, 'font-size':12, fill:'#666' }, axesG);
+  yLab.textContent = 'visits of road';
+  // tick marks
+  for (let xv = 0; xv <= 50; xv += 10) {
+    IRL.svgEl('line', { x1: X(xv), y1: H-padB, x2: X(xv), y2: H-padB+4, stroke: '#888' }, axesG);
+    IRL.svgEl('text', { x: X(xv), y: H-padB+15, 'font-size':10, fill:'#777', 'text-anchor':'middle' }, axesG).textContent = xv;
+  }
+  for (let yv = 0; yv <= 40; yv += 10) {
+    IRL.svgEl('line', { x1: padL-4, y1: Y(yv), x2: padL, y2: Y(yv), stroke: '#888' }, axesG);
+    IRL.svgEl('text', { x: padL-7, y: Y(yv)+3, 'font-size':10, fill:'#777', 'text-anchor':'end' }, axesG).textContent = yv;
+  }
+
+  // expert and vertices (synthetic 2D example for visualization)
+  const expert = [15, 25];
+  const verts = [
+    { p: [5, 5],   label: 'f_0 (random)' },
+    { p: [5, 35],  label: 'f_1' },
+    { p: [40, 30], label: 'f_2' },
+    { p: [42, 10], label: 'f_3' },
+    { p: [15, 25], label: 'f_4 = f_E' }
+  ];
+  // draw expert star
+  function drawStar(cx, cy, r1, r2) {
+    let pts = '';
+    for (let k = 0; k < 10; k++) {
+      const a = -Math.PI/2 + k*Math.PI/5;
+      const rr = k % 2 === 0 ? r1 : r2;
+      pts += `${cx + rr*Math.cos(a)},${cy + rr*Math.sin(a)} `;
+    }
+    return pts;
+  }
+  IRL.svgEl('polygon', {
+    points: drawStar(X(expert[0]), Y(expert[1]), 11, 5),
+    fill: 'gold', stroke: 'black', 'stroke-width': 1.2
+  }, expertG);
+  IRL.svgEl('text', {
+    x: X(expert[0])+14, y: Y(expert[1])+5, 'font-size':13, 'font-weight':600, fill:'#222'
+  }, expertG).textContent = 'f_E';
+
+  // convex hull (gift wrapping)
+  function cross(o, a, b) { return (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0]); }
+  function convexHull(points) {
+    if (points.length < 2) return points.slice();
+    const pts = points.slice().sort((a, b) => a[0]-b[0] || a[1]-b[1]);
+    const lower = [];
+    for (const p of pts) {
+      while (lower.length >= 2 && cross(lower[lower.length-2], lower[lower.length-1], p) <= 0) lower.pop();
+      lower.push(p);
+    }
+    const upper = [];
+    for (let i = pts.length - 1; i >= 0; i--) {
+      const p = pts[i];
+      while (upper.length >= 2 && cross(upper[upper.length-2], upper[upper.length-1], p) <= 0) upper.pop();
+      upper.push(p);
+    }
+    upper.pop(); lower.pop();
+    return lower.concat(upper);
+  }
+  // closest point on segment to point
+  function closestOnSeg(a, b, p) {
+    const ab = [b[0]-a[0], b[1]-a[1]];
+    const ap = [p[0]-a[0], p[1]-a[1]];
+    const t = Math.max(0, Math.min(1, (ap[0]*ab[0]+ap[1]*ab[1]) / (ab[0]**2 + ab[1]**2 + 1e-9)));
+    return [a[0]+t*ab[0], a[1]+t*ab[1]];
+  }
+  function closestOnHull(hull, p) {
+    if (hull.length === 0) return null;
+    if (hull.length === 1) return hull[0];
+    if (hull.length === 2) return closestOnSeg(hull[0], hull[1], p);
+    let best = null, bd = Infinity;
+    for (let i = 0; i < hull.length; i++) {
+      const q = closestOnSeg(hull[i], hull[(i+1)%hull.length], p);
+      const d = Math.hypot(q[0]-p[0], q[1]-p[1]);
+      if (d < bd) { bd = d; best = q; }
+    }
+    // also check if p is inside hull
+    let inside = true;
+    for (let i = 0; i < hull.length; i++) {
+      const j = (i+1) % hull.length;
+      if (cross(hull[i], hull[j], p) < 0) { inside = false; break; }
+    }
+    if (inside) return p.slice();
+    return best;
+  }
+
+  let k = 0;
+  function render() {
+    IRL.clear(hullG); IRL.clear(vertsG); IRL.clear(projG);
+    const revealed = verts.slice(0, k).map(v => v.p);
+    if (revealed.length >= 3) {
+      const hull = convexHull(revealed);
+      const pts = hull.map(p => `${X(p[0])},${Y(p[1])}`).join(' ');
+      IRL.svgEl('polygon', {
+        points: pts, fill: '#cfe5ff', 'fill-opacity': 0.55,
+        stroke: '#3a6dd2', 'stroke-width': 1.5
+      }, hullG);
+    } else if (revealed.length === 2) {
+      IRL.svgEl('line', {
+        x1: X(revealed[0][0]), y1: Y(revealed[0][1]),
+        x2: X(revealed[1][0]), y2: Y(revealed[1][1]),
+        stroke: '#3a6dd2', 'stroke-width': 2
+      }, hullG);
+    }
+    revealed.forEach((p, i) => {
+      IRL.svgEl('circle', {
+        cx: X(p[0]), cy: Y(p[1]), r: 5,
+        fill: '#fff', stroke: '#3a6dd2', 'stroke-width': 2,
+        class: 'fade-in'
+      }, vertsG);
+      IRL.svgEl('text', {
+        x: X(p[0]) + 8, y: Y(p[1]) - 8, 'font-size': 11,
+        fill: '#3a6dd2', class: 'fade-in'
+      }, vertsG).textContent = verts[i].label;
+    });
+    // projection line
+    const closest = revealed.length > 0 ? closestOnHull(revealed.length > 2 ? convexHull(revealed) : revealed, expert) : null;
+    const distLabel = document.getElementById('poly-d');
+    if (closest) {
+      const d = Math.hypot(closest[0]-expert[0], closest[1]-expert[1]);
+      if (d > 1e-4) {
+        IRL.svgEl('line', {
+          x1: X(closest[0]), y1: Y(closest[1]),
+          x2: X(expert[0]), y2: Y(expert[1]),
+          stroke: '#d23a3a', 'stroke-width': 2.2, 'stroke-dasharray': '5,3'
+        }, projG);
+        IRL.svgEl('circle', {
+          cx: X(closest[0]), cy: Y(closest[1]), r: 4,
+          fill: '#d23a3a', stroke: '#fff', 'stroke-width': 1.5
+        }, projG);
+      }
+      distLabel.textContent = d.toFixed(2);
+    } else {
+      distLabel.textContent = ',';
+    }
+    document.getElementById('poly-k').textContent = revealed.length;
+    const btn = document.getElementById('poly-step');
+    if (k >= verts.length) { btn.disabled = true; btn.textContent = 'Converged'; }
+    else { btn.disabled = false; btn.textContent = k === 0 ? 'Start' : 'Add next vertex'; }
+  }
+  document.getElementById('poly-step').addEventListener('click', () => { if (k < verts.length) { k++; render(); } });
+  document.getElementById('poly-reset').addEventListener('click', () => { k = 0; render(); });
+  render();
+})();
+</script>
+
+<div class="aside">
+<h4>"Why does the direction-finding step look like an SVM?"</h4>
+<p>
+When you ask "what direction does the expert outscore the candidates
+most in?", you're literally solving the support-vector-machine
+problem, find the hyperplane that best separates the expert from the
+candidates. It turns out (and we prove this in the
+<a href="#trustme">appendix</a> if you want the math) that this is
+the same problem as projecting the expert onto the convex hull of
+candidates. They're two views of the same calculation. The "projection
+view" is more intuitive once you have the polytope picture: the
+algorithm is just stretching the hull toward the expert, one vertex
+at a time.
+</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="mmp">Maximum Margin Planning (Ratliff, Bagnell &amp; Zinkevich, 2006)</h2>
+
+<div class="note">
+<strong>MMP in one sentence:</strong> learn a cost function such that,
+when you run a planner on it, the planner's optimal path matches the
+expert's demonstrated path, and do this so the recovered cost works
+across many different maps.
+</div>
+
+<p>Three load-bearing parts of that sentence:</p>
+
+<ol>
+<li>We learn a <strong>cost function</strong>, not a policy. Specifically, weights $w$ on terrain features.</li>
+<li>We match the planner's <strong>output path</strong>, not its internal workings. Plug $w$ into Dijkstra, value iteration, A*, anything, and the path that comes out must equal $\xi_E$.</li>
+<li>We want the recovered cost to be <strong>portable across maps</strong>. The expert may demonstrate on a forest map; the same $w$ should produce a sensible path on a city map, as long as both maps use the same terrain types.</li>
+</ol>
+
+<p>
+Point 3 is the philosophical break from Abbeel-Ng. Abbeel-Ng recovers
+a policy that matches the expert on this map. MMP recovers a cost that
+works on any map. Everything that follows is mechanics for making
+point 2 hold.
+</p>
+
+<div class="note">
+<strong>The five symbols this section uses.</strong> Everything below
+is built from these, defined once here so nothing appears cold:
+<ul style="margin: 8px 0 0">
+<li>$\xi$ (Greek "xi"), a path through the grid. $\xi_E$ is the expert's demonstrated path, the one we observe.</li>
+<li>$w$, the cost weights we are solving for. One weight per terrain type.</li>
+<li>$\phi(s)$, the feature vector of a single cell (a one-hot terrain indicator). $w \cdot \phi(s)$ is the cost of standing on cell $s$.</li>
+<li>$f(\xi) = \sum_{s \in \xi} \phi(s)$, the feature counts of path $\xi$ (how many grass cells, how many road cells, and so on).</li>
+<li>$c(\xi) = w \cdot f(\xi)$, the <strong>total cost of path $\xi$</strong> under the current weights. So $c(\xi_E)$ is the expert path's cost, and the planner's job is to find the path with the smallest $c$.</li>
+</ul>
+</div>
+
+<h3>Build the intuition on a tiny example</h3>
+
+<p>
+Forget the 12x12 grid for a moment. Imagine just two feasible paths
+from start to goal:
+</p>
+
+<ul>
+<li><strong>Expert path:</strong> start &rarr; road &rarr; goal. One road cell.</li>
+<li><strong>Alternative path:</strong> start &rarr; grass &rarr; grass &rarr; goal. Two grass cells.</li>
+</ul>
+
+<p>
+We want weights $w = (w_{\text{grass}}, w_{\text{road}})$ such that
+the planner, given $w$, picks the expert path. Translation: we want
+$\;w_{\text{road}} \,<\, 2 w_{\text{grass}}$.
+</p>
+
+<p>That's the constraint. Easy. Many $w$ satisfy it.</p>
+
+<h3>Naive update: raise what the planner overused</h3>
+
+<p>
+Try a guess for $w$. Run the planner. If it returns the expert path,
+we're done. If it returns the alternative, we made grass too cheap.
+Raise the cost of grass. Lower the cost of road if the expert used it
+and the alternative didn't. Repeat.
+</p>
+
+<p>
+"Raise what the planner overused, lower what the expert favoured." That
+is the update rule, stated informally. If we stopped here we would have
+a perfectly workable algorithm. But it has one problem.
+</p>
+
+<h3>Why we need a margin, not just any cost ordering</h3>
+
+<p>
+The constraint $w_{\text{road}} < 2 w_{\text{grass}}$ is satisfied by
+both $w = (1, 1.99)$ and $w = (1, 0.2)$. The first sits on a knife's
+edge: a tiny perturbation flips the planner's choice. The second has
+room to breathe. We want the second.
+</p>
+
+<p>MMP makes the breathing room explicit by demanding a margin:</p>
+
+<p style="text-align:center; font-size:15.5px; margin: 14px 0">
+$c(\xi) \;\geq\; c(\xi_E) \,+\, (\text{how different is }\xi\text{ from }\xi_E)$
+</p>
+
+<p>
+"How different" counts the cells in $\xi$ that are not on the expert
+path. This is the <strong>Hamming distance</strong>. Formalised: define
+$L(s) = 1$ if state $s$ is not on the expert path, $L(s) = 0$ if it
+is, and define $\ell(\xi) = \sum_{s \in \xi} L(s)$. The constraint
+becomes:
+</p>
+
+<p style="text-align:center; font-size:15.5px; margin: 14px 0">
+$c(\xi) \;\geq\; c(\xi_E) \,+\, \ell(\xi) \quad\forall\,\xi.$
+</p>
+
+<p>
+Read it: the more an alternative path differs from the expert, the
+more we should outscore it. Tiny variations cost slightly more.
+Wild variations cost dramatically more. That scaling makes the
+recovered cost robust.
+</p>
+
+<h3>The trick: one planner call finds the worst violator</h3>
+
+<p>
+The constraint must hold for every feasible path. On the 12x12
+gridworld there are millions. On a city road network, more than the
+number of atoms in the universe. We cannot enumerate. Instead, find
+the single <strong>worst violator</strong>, fix that one, repeat.
+</p>
+
+<p>
+The worst violator is the path that breaks the constraint by the
+biggest margin. The amount by which $\xi$ violates the constraint is
+$c(\xi_E) + \ell(\xi) - c(\xi)$. Maximising that over $\xi$, and
+dropping the constant $c(\xi_E)$, gives:
+</p>
+
+<p style="text-align:center; font-size:15.5px; margin: 14px 0">
+$\xi^* \;=\; \arg\max_\xi \big[\ell(\xi) - c(\xi)\big] \;=\; \arg\min_\xi \big[c(\xi) - \ell(\xi)\big].$
+</p>
+
+<p>
+The worst violator is the path that minimises $c(\xi) - \ell(\xi)$:
+the cheap-and-very-different-from-expert path. Now the key
+observation. $c(\xi)$ and $\ell(\xi)$ both decompose additively over
+cells, so their difference does too:
+</p>
+
+<p style="text-align:center; font-size:15.5px; margin: 14px 0">
+$c(\xi) - \ell(\xi) \;=\; \sum_{s \in \xi} \big(c(s) - L(s)\big) \;=\; \sum_{s \in \xi} c'(s)$
+</p>
+
+<p>
+where $c'(s) = c(s) - L(s)$ is the loss-augmented cost. Minimising a
+sum over cells is exactly what shortest-path solvers do. So <strong>one
+planner call under modified per-cell costs returns the worst
+violator</strong>.
+</p>
+
+<div class="note">
+<strong>What "loss-augmented" means in plain English.</strong> The
+modification $c'(s) = c(s) - L(s)$ does nothing on cells the expert
+visited ($L(s) = 0$) and gives a 1-unit discount on cells the expert
+did not ($L(s) = 1$). So we run shortest-path on a map where
+non-expert cells look 1 unit cheaper than they really are. The
+discount tempts the planner toward non-expert cells. Whatever path the
+planner returns is the alternative that gets closest to beating the
+expert. That is the path we need to fix.
+</div>
+
+<h3>A concrete example: which paths actually violate the constraint?</h3>
+
+<p>
+The definition above is precise but slippery on first read. Let's see
+what kinds of paths actually count as violators with a small worked
+example. Suppose the expert path costs $c(\xi_E) = 1.2$ under current
+$w$. Consider three candidate paths:
+</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>candidate</th><th>cost $c(\xi)$</th><th>Hamming $\ell(\xi)$</th><th>required cost: $c(\xi_E) + \ell$</th><th>violates?</th><th>violation amount</th></tr></thead>
+<tbody>
+<tr><td>A</td><td>$0.8$</td><td>$3$</td><td>$1.2 + 3 = 4.2$</td><td><strong>yes</strong></td><td>$+3.4$</td></tr>
+<tr><td>B</td><td>$4.0$</td><td>$3$</td><td>$1.2 + 3 = 4.2$</td><td><strong>yes</strong></td><td>$+0.2$</td></tr>
+<tr><td>C</td><td>$5.0$</td><td>$2$</td><td>$1.2 + 2 = 3.2$</td><td>no</td><td>$-1.8$</td></tr>
+</tbody></table></div>
+
+<p>Three observations:</p>
+
+<ul>
+<li><strong>A is cheap and different.</strong> Cost $0.8 < $ expert
+cost $1.2$, AND high Hamming. Big violation. The clearest kind of
+violator: the planner found a path that is both genuinely cheaper than
+the expert and goes through lots of non-expert cells.</li>
+<li><strong>B is <em>more expensive</em> than the expert but still
+violates.</strong> Cost $4.0 > 1.2$, but the Hamming margin demands at
+least $4.2$, and B falls short by $0.2$. A path can violate the
+constraint without being cheaper than the expert in absolute terms; it
+just has to fail to be expensive <em>enough</em> given how different
+it is.</li>
+<li><strong>C does not violate.</strong> Even with a moderate Hamming
+distance of 2, C is expensive enough ($5.0 > 3.2$) to clear the
+margin. The constraint is satisfied here.</li>
+</ul>
+
+<p>
+The worst violator at this iteration is A (violation amount $+3.4$).
+That is the path the loss-augmented planner would return, and that is
+the path the update rule will "fix" by raising the cost of A's
+non-expert cells.
+</p>
+
+<p>
+<strong>The refined intuition.</strong> The worst violator is the
+path that (a) visits lots of non-expert cells (high Hamming), and (b)
+costs less than $c(\xi_E) + \ell(\xi)$ under current $w$. In practice
+the worst violator usually combines "cheaper than expert" and
+"different from expert," because those are the two ways to maximise
+the violation. But the constraint MMP enforces is the looser one: it
+demands the cost gap exceed the Hamming margin, not just that the
+expert be the cheapest path.
+</p>
+
+<div class="note">
+<strong>Why this looser constraint matters.</strong> If we only
+required "expert cheaper than alternatives by any amount," tiny noise
+in the costs would flip the planner's choice. By demanding the gap
+<em>scale with Hamming distance</em>, we get a wide buffer: paths far
+from the expert have to be much more expensive, paths close to the
+expert can be only slightly more expensive. The recovered $w$ has room
+to breathe and remains robust to small perturbations.
+</div>
+
+<h3>The update rule, derived</h3>
+
+<p>
+Once we have the violator $\xi^*$, we want to raise $w$ on terrains
+$\xi^*$ overused and lower $w$ on terrains the expert favoured. The
+right direction is the difference in feature counts:
+</p>
+
+<p style="text-align:center; font-size:15.5px; margin: 14px 0">
+$w \;\leftarrow\; w \,+\, \eta \cdot \big(f^* \,-\, f_E\big)$
+</p>
+
+<p>
+Read $f^* - f_E$ component by component: positive entries mark
+terrains where the violator overshoots the expert, negative entries
+mark terrains where the expert overshoots the violator. Adding
+$\eta \cdot (f^* - f_E)$ to $w$ raises the cost of the first kind
+and lowers the cost of the second kind, exactly what we want.
+</p>
+
+<p>
+After each update we <strong>project $w$ to be non-negative</strong>
+(any component that went below zero is clipped to zero). This keeps
+$w$ a valid cost vector and prevents the algorithm from making cells
+arbitrarily attractive.
+</p>
+
+<p>
+The update is the subgradient of the structured hinge loss; the full
+derivation lives in the drop-down at the end of this section.
+</p>
+
+<h3>The algorithm, as one block of pseudocode</h3>
+
+<pre>
+Initialise w &ge; 0 (random non-negative weights).
+Repeat until convergence:
+  1. c(s)  = w &middot; phi(s)                  # per-state cost under current weights
+  2. c'(s) = c(s) - L(s)                  # 1-unit discount on non-expert cells
+  3. xi*   = shortest_path(c')            # the worst violator, one planner call
+  4. if xi* matches the expert:           # no violator remains
+       stop
+  5. w &larr; (1 - eta*lambda)*w + eta*(f(xi*) - f_E)   # L2 shrinkage + subgradient
+     w &larr; max(0, w)                       # project to non-negative
+</pre>
+
+<p>
+Here $\eta$ is the step size and $\lambda$ is the L2 regularisation
+strength (a hyperparameter, often written $1/C$). Two things happen in
+line 5. The $(1 - \eta\lambda)\,w$ part shrinks the current weights
+toward zero, which is the effect of the $\tfrac{1}{2}\|w\|^2$
+regulariser. The $\eta\,(f(\xi^*) - f_E)$ part raises the cost of
+terrains the violator overused and lowers the cost of terrains the
+expert favoured. This is exactly the update in Ratliff, Bagnell &amp;
+Zinkevich (2006). If you set $\lambda = 0$ (no regularisation), the
+shrinkage disappears and you get the bare subgradient step
+$w \leftarrow w + \eta\,(f(\xi^*) - f_E)$.
+</p>
+
+<p>
+Five lines on top of any shortest-path solver. Every iteration: one
+planner call, one feature-difference, one gradient step. The
+exponentially-many-constraints structured SVM collapses into something
+an undergrad can implement in 50 lines of Python. The drop-down below
+proves why line 5 has exactly this form.
+</p>
+
+<details class="proof-box">
+<summary>Show me the full structured-SVM derivation</summary>
+<div class="proof-content">
+
+<p>
+The intuitive walk-through above hand-waved through two claims. This
+appendix proves both of them rigorously, following Ratliff, Bagnell
+&amp; Zinkevich (2006), which itself builds on the general
+structured-prediction framework of Tsochantaridis, Joachims, Hofmann
+&amp; Altun (2005).
+</p>
+
+<p><strong>What this appendix proves.</strong> Two results:</p>
+
+<ol>
+<li>The path $\xi^*$ returned by shortest-path under modified costs $c'(s) = c(s) - L(s)$ is the worst violator of the MMP margin constraint.</li>
+<li>The vector $f^* - f_E$ is the correct gradient-descent direction for the structured hinge loss, so the update rule $w \leftarrow w + \eta(f^* - f_E)$ is a valid optimisation step.</li>
+</ol>
+
+<p>Both claims are non-trivial. Both follow from the same setup.</p>
+
+<h4>Notation, all in one place</h4>
+
+<p>Symbols used in this appendix:</p>
+
+<ul style="font-size:14.5px">
+<li>$\xi$, a feasible path through the gridworld.</li>
+<li>$\xi_E$, the expert's demonstrated path (observed).</li>
+<li>$\xi^*$, the worst-violator path (to be defined).</li>
+<li>$\phi(s)$, the feature vector of a single cell. $\phi(s) = (1, 0, 0, 0, 0)$ if $s$ is grass, and so on.</li>
+<li>$f(\xi) = \sum_{s \in \xi} \phi(s)$, the feature counts of path $\xi$. $f_E = f(\xi_E)$ and $f^* = f(\xi^*)$ are shorthands.</li>
+<li>$w$, the cost weights we are solving for. $w \cdot \phi(s) = c(s)$ is the cost of cell $s$. $w \cdot f(\xi) = c(\xi)$ is the total cost of path $\xi$.</li>
+<li>$L(s) \in \{0, 1\}$, the per-cell Hamming loss. $L(s) = 1$ if $s$ is not on the expert path.</li>
+<li>$\ell(\xi) = \sum_{s \in \xi} L(s)$, the total Hamming loss of path $\xi$. Counts how many cells $\xi$ visits that the expert did not.</li>
+<li>$\zeta \geq 0$, a slack variable allowing the margin constraint to be partially violated.</li>
+<li>$C > 0$, a regularisation tradeoff constant.</li>
+</ul>
+
+<h4>The MMP optimisation, formalised</h4>
+
+<p>
+The goal is to find weights $w$ such that the expert path is cheaper
+than every alternative by at least a Hamming-distance margin. With L2
+regularisation and a slack variable for the soft-margin version:
+</p>
+
+<p style="text-align:center; font-size:14.5px; margin: 12px 0">
+$\displaystyle \min_{w,\, \zeta} \;\; \tfrac{1}{2}\|w\|^2 + C \cdot \zeta$
+</p>
+<p style="text-align:center; font-size:14.5px; margin: 4px 0 12px">
+$\text{s.t.}\quad w \cdot f_E + \ell(\xi) \leq w \cdot f(\xi) + \zeta \;\;\text{for every feasible}\;\xi,\quad w \geq 0,\; \zeta \geq 0.$
+</p>
+
+<p>
+Read the constraint left to right: <em>expert cost plus margin (the
+Hamming distance) is at most alternative cost plus slack</em>. The
+$\tfrac{1}{2}\|w\|^2$ term picks the smallest-magnitude $w$ among the
+many that satisfy the constraints (which would otherwise be
+under-determined). The constraint must hold for every feasible path
+$\xi$, of which there are exponentially many.
+</p>
+
+<h4>Claim 1: shortest-path under $c'(s) = c(s) - L(s)$ returns the worst violator</h4>
+
+<p>
+We want to show that the single most-violated constraint can be found
+with one shortest-path call, instead of enumerating exponentially many
+paths.
+</p>
+
+<p><strong>Step 1.</strong> Rearrange the soft-margin constraint to isolate the slack:</p>
+
+<p style="text-align:center; font-size:14.5px; margin: 10px 0">
+$\ell(\xi) - w \cdot \big(f(\xi) - f_E\big) \leq \zeta \quad\text{for every}\;\xi.$
+</p>
+
+<p>
+The left-hand side measures how much path $\xi$ violates the constraint.
+A path with $\ell(\xi)$ much larger than $w \cdot (f(\xi) - f_E)$ is a
+serious violator: it is very different from the expert (high
+$\ell(\xi)$) and is not much more expensive (low $w \cdot (f(\xi) -
+f_E)$).
+</p>
+
+<p><strong>Step 2.</strong> The smallest $\zeta$ that satisfies <em>every</em> constraint is the maximum of the left-hand side over all $\xi$:</p>
+
+<p style="text-align:center; font-size:14.5px; margin: 10px 0">
+$\zeta^* \;=\; \max_\xi \big[\ell(\xi) - w \cdot f(\xi)\big] \,+\, w \cdot f_E.$
+</p>
+
+<p>(The $w \cdot f_E$ term came out of the max because it does not depend on $\xi$.)</p>
+
+<p><strong>Step 3.</strong> Convert the $\max$ to a $\min$ by flipping the sign:</p>
+
+<p style="text-align:center; font-size:14.5px; margin: 10px 0">
+$\max_\xi \big[\ell(\xi) - w \cdot f(\xi)\big] \;=\; -\min_\xi \big[w \cdot f(\xi) - \ell(\xi)\big].$
+</p>
+
+<p>
+The worst violator is the $\xi$ that minimises $w \cdot f(\xi) -
+\ell(\xi)$.
+</p>
+
+<p><strong>Step 4.</strong> Now the key observation: both $w \cdot f(\xi)$ and $\ell(\xi)$ decompose additively over the cells of the path:</p>
+
+<p style="text-align:center; font-size:14.5px; margin: 10px 0">
+$w \cdot f(\xi) \,=\, \sum_{s \in \xi} c(s), \qquad \ell(\xi) \,=\, \sum_{s \in \xi} L(s).$
+</p>
+
+<p>So their difference is also a sum over cells:</p>
+
+<p style="text-align:center; font-size:14.5px; margin: 10px 0">
+$w \cdot f(\xi) - \ell(\xi) \;=\; \sum_{s \in \xi} \big(c(s) - L(s)\big) \;=\; \sum_{s \in \xi} c'(s).$
+</p>
+
+<p>where $c'(s) = c(s) - L(s)$ is the loss-augmented per-cell cost.</p>
+
+<p><strong>Conclusion.</strong> The worst violator $\xi^* = \arg\min_\xi \sum_{s \in \xi} c'(s)$ is exactly the shortest path under modified per-cell costs $c'$. A standard shortest-path algorithm (Dijkstra, value iteration, A*) returns it in one call. <span style="float:right; font-weight:700">∎</span></p>
+
+<h4>Claim 2: the update rule is gradient descent on the full objective</h4>
+
+<p>
+We want to show that line 5 of the algorithm, $w \leftarrow
+(1 - \eta\lambda)\,w + \eta\,(f^* - f_E)$, is exactly one gradient-descent
+step on the regularised MMP objective. This is the part that justifies
+where the $(1 - \eta\lambda)$ shrinkage factor comes from.
+</p>
+
+<p><strong>Step 1, write down the objective for one demonstration.</strong> Combine the L2 regulariser and the structured hinge loss:</p>
+
+<p style="text-align:center; font-size:14.5px; margin: 10px 0">
+$J(w) \;=\; \underbrace{\tfrac{\lambda}{2}\|w\|^2}_{\text{L2 regulariser}} \;+\; \underbrace{\max\big(0,\; \ell(\xi^*) - w \cdot (f^* - f_E)\big)}_{\text{structured hinge } \mathcal H(w)}.$
+</p>
+
+<p>
+The hinge term $\mathcal H(w)$ is the constraint-violation amount for
+the worst violator $\xi^*$. It is zero when the expert beats $\xi^*$ by
+the required margin, positive when the constraint is violated. The
+$\tfrac{\lambda}{2}\|w\|^2$ term is the L2 regulariser ($\lambda$ is its
+strength). We want to minimise $J(w)$.
+</p>
+
+<p><strong>Step 2, differentiate the L2 term.</strong> The gradient of $\tfrac{\lambda}{2}\|w\|^2$ with respect to $w$ is:</p>
+
+<p style="text-align:center; font-size:14.5px; margin: 10px 0">
+$\dfrac{\partial}{\partial w} \left[\tfrac{\lambda}{2}\|w\|^2\right] \;=\; \dfrac{\partial}{\partial w} \left[\tfrac{\lambda}{2}\, (w_1^2 + w_2^2 + \cdots)\right] \;=\; \lambda\, w.$
+</p>
+
+<p>(Each $w_i^2$ differentiates to $2 w_i$, the $\tfrac{1}{2}$ cancels the 2, leaving $\lambda w_i$ in each coordinate, i.e. $\lambda w$.)</p>
+
+<p><strong>Step 3, differentiate the hinge term.</strong> In the regime where the hinge is active (constraint violated, $\mathcal H > 0$), the hinge equals $\ell(\xi^*) - w \cdot (f^* - f_E)$. Its gradient:</p>
+
+<p style="text-align:center; font-size:14.5px; margin: 10px 0">
+$\dfrac{\partial \mathcal H}{\partial w} \;=\; \dfrac{\partial}{\partial w}\big[\ell(\xi^*) - w \cdot (f^* - f_E)\big] \;=\; -\,(f^* - f_E) \;=\; f_E - f^*.$
+</p>
+
+<p>($\ell(\xi^*)$ does not depend on $w$, so it drops. The term $-w \cdot (f^* - f_E)$ is linear in $w$ with coefficient $-(f^* - f_E)$, so its derivative is $-(f^* - f_E)$.)</p>
+
+<p><strong>Step 4, combine.</strong> The gradient of the full objective is the sum of the two pieces:</p>
+
+<p style="text-align:center; font-size:14.5px; margin: 10px 0">
+$\dfrac{\partial J}{\partial w} \;=\; \lambda\, w \;+\; (f_E - f^*).$
+</p>
+
+<p><strong>Step 5, take a gradient-descent step.</strong> Gradient descent moves $w$ in the direction <em>opposite</em> the gradient, scaled by step size $\eta$:</p>
+
+<p style="text-align:center; font-size:14.5px; margin: 10px 0">
+$w \;\leftarrow\; w \,-\, \eta \cdot \dfrac{\partial J}{\partial w} \;=\; w \,-\, \eta\,\big(\lambda w + (f_E - f^*)\big).$
+</p>
+
+<p>Distribute the $\eta$ and group the $w$ terms:</p>
+
+<p style="text-align:center; font-size:14.5px; margin: 10px 0">
+$w \;\leftarrow\; w \,-\, \eta\lambda\, w \,-\, \eta\,(f_E - f^*) \;=\; (1 - \eta\lambda)\, w \,+\, \eta\,(f^* - f_E).$
+</p>
+
+<p>
+<strong>Conclusion.</strong> This is exactly line 5 of the algorithm.
+The $(1 - \eta\lambda)\,w$ part is the L2 shrinkage (it pulls $w$ toward
+zero each step, in proportion to the regularisation strength
+$\lambda$). The $\eta\,(f^* - f_E)$ part is the structured-hinge
+subgradient (it raises the cost of terrains the violator overused).
+Setting $\lambda = 0$ removes the shrinkage and recovers the bare
+subgradient step. <span style="float:right; font-weight:700">∎</span>
+</p>
+
+<div class="note">
+<strong>Why the shrinkage matters.</strong> Without the
+$(1 - \eta\lambda)$ factor, nothing stops $w$ from growing without
+bound across iterations: each subgradient step can keep pushing the
+weights larger. The shrinkage caps this. At a fixed point, the
+shrinkage pull $\eta\lambda w$ exactly balances the subgradient push
+$\eta(f^* - f_E)$, which gives the unique regularised solution. This is
+why Ratliff, Bagnell &amp; Zinkevich (2006) include the L2 term: not for
+its own sake, but to make the recovered $w$ well-defined and bounded.
+</div>
+
+<h4>Why this is called "structured"</h4>
+
+<p>
+Standard classification predicts a label from a small finite set (cat,
+dog, fish). The output space is small enough to enumerate, so the
+loss is just per-example accuracy.
+</p>
+
+<p>
+<strong>Structured</strong> classification predicts a combinatorial
+object: a parse tree, a translation, a path through a graph. The
+output space is exponentially large, so enumeration is impossible.
+The structured-SVM framework (Tsochantaridis et al. 2005) handles
+this with the loss-augmented inference trick we just used: find the
+worst-violating output via a problem-specific solver (here, shortest
+path), then take a subgradient step.
+</p>
+
+<p>
+MMP is the path-prediction specialisation. The "structure" is that
+the output (a trajectory) is a sequence of states with feature counts
+that decompose additively over cells. That decomposability is what
+lets the worst-violator search collapse into a shortest-path call.
+Other structured outputs (trees, alignments) use different solvers but
+the same overall framework.
+</p>
+
+</div>
+</details>
+
+<!-- ============================================================ -->
+<h2 id="mmp-walk">Walk-through: how MMP rewrites the cost map</h2>
+
+<p>
+Starting with random non-negative weights and running on our
+gridworld:
+</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>iter</th><th>$w$ (grass, road, sand, water, mountain)</th><th>What's happening</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>[3.6, 0.0, 26.0, 0.0, 0.8]</td><td>random init; sand is randomly very high</td></tr>
+<tr><td>1</td><td>[6.6, 2.7, 26.0, 8.6, 9.5]</td><td>loss-aug planner explored everywhere, MMP raises everything</td></tr>
+<tr><td>3</td><td>[8.0, 4.8, 26.0, 16.8, 15.9]</td><td>water and mountain finally getting expensive</td></tr>
+<tr><td>99</td><td>[8.04, 4.99, 25.81, 17.90, 16.84]</td><td>converged</td></tr>
+</tbody></table></div>
+
+<p>The recovered cost ordering is:</p>
+
+<ul>
+<li>road = 4.99 (cheap)</li>
+<li>grass = 8.04 (more expensive than road, which is right!)</li>
+<li>water = 17.90, mountain = 16.84 (both expensive, which is right!)</li>
+<li>sand = 25.81 (most expensive, but actually true cost says it should
+be mid-range, this is a quirk of random init, the algorithm never had
+reason to lower it)</li>
+</ul>
+
+<p>
+Compare to the true costs $(1, 0.2, 2, 5, 8)$. The recovered numbers
+are wrong in magnitude but mostly right in ordering (road cheapest,
+mountain expensive). When we plan a path under the recovered cost
+function, we get the same 23-step road snake as the expert, even
+though the numbers don't match.
+</p>
+
+<p>
+<strong>This is the deep point.</strong> The recovered cost function
+is not unique, there are many cost functions that would produce the
+same expert behaviour. MMP picks one of them that satisfies its
+margin constraint. The recovered <em>policy</em> is right; the
+recovered <em>weights</em> are off by a multiplicative factor.
+</p>
+
+
+
+<div class="aside">
+<h4>Why does the slack plateau at 1?</h4>
+<p>
+When you run MMP on this gridworld, the slack (the constraint
+violation amount) stops going down at exactly 1.0 and stays there.
+This is not a bug. The Hamming penalty is integer-valued: every
+non-expert cell counts as 1. Even at the best $w$, the loss-augmented
+planner can usually find <em>one</em> non-expert cell to step on for
+a free +1 bonus. So slack = 1 is the discrete floor. The algorithm
+has converged, the policy is correct, the slack just cannot go below
+the granularity of the penalty.
+</p>
+</div>
+
+<!-- ============================================================ -->
+<details class="proof-box" id="worked-mmp">
+<summary>Fully worked numerical example: MMP on a 2x3 grid (click to expand)</summary>
+<div class="proof-content">
+<p>
+For MMP we need an MDP where the expert <em>doesn't</em> visit every
+cell, otherwise the Hamming-loss bonus has nothing to grab onto.
+Here's a 2-row, 3-column grid:
+</p>
+
+<svg class="diagram" viewBox="0 0 320 220" width="320" height="220">
+  <g font-size="14" font-family="sans-serif">
+    <!-- Top row: S, road, goal -->
+    <rect x="10" y="20" width="100" height="80" fill="#9ddb83" stroke="#555"/>
+    <text x="60" y="50" text-anchor="middle" font-weight="bold">0 (S)</text>
+    <text x="60" y="68" text-anchor="middle" font-size="12">grass</text>
+
+    <rect x="110" y="20" width="100" height="80" fill="#d6d6d6" stroke="#555"/>
+    <text x="160" y="50" text-anchor="middle" font-weight="bold">1</text>
+    <text x="160" y="68" text-anchor="middle" font-size="12">road</text>
+
+    <rect x="210" y="20" width="100" height="80" fill="gold" stroke="#555"/>
+    <text x="260" y="50" text-anchor="middle" font-weight="bold">2 (G)</text>
+    <text x="260" y="68" text-anchor="middle" font-size="12">goal</text>
+
+    <!-- Bottom row: three grass cells -->
+    <rect x="10" y="100" width="100" height="80" fill="#9ddb83" stroke="#555"/>
+    <text x="60" y="130" text-anchor="middle" font-weight="bold">3</text>
+    <text x="60" y="148" text-anchor="middle" font-size="12">grass</text>
+
+    <rect x="110" y="100" width="100" height="80" fill="#9ddb83" stroke="#555"/>
+    <text x="160" y="130" text-anchor="middle" font-weight="bold">4</text>
+    <text x="160" y="148" text-anchor="middle" font-size="12">grass</text>
+
+    <rect x="210" y="100" width="100" height="80" fill="#9ddb83" stroke="#555"/>
+    <text x="260" y="130" text-anchor="middle" font-weight="bold">5</text>
+    <text x="260" y="148" text-anchor="middle" font-size="12">grass</text>
+  </g>
+</svg>
+
+<ul>
+<li><strong>Six states</strong>, indexed 0–5. State 0 is start, state 2 is goal.</li>
+<li><strong>Actions:</strong> N, E, S, W. Walls reflect.</li>
+<li><strong>True cost:</strong> grass = 1, road = 0.2, goal = 0.</li>
+<li><strong>Feature map:</strong> $\phi$ is 2-dim grass/road one-hot.</li>
+</ul>
+
+<h3>Step 1 · The expert's path and visited states</h3>
+
+<p>The expert plans optimally under the true costs. The cheapest path from state 0 to state 2:</p>
+
+<p style="text-align: center; font-size: 16px">
+state 0 (grass) → E → state 1 (road) → E → state 2 (goal)
+</p>
+
+<p>Total cost = 1 + 0.2 + 0 = 1.2. (Going via the bottom row would cost 1+1+1+1+0 = 4, much more.)</p>
+
+<p>Feature expectation:</p>
+<p style="text-align: center">
+$f_E = \phi(0) + \phi(1) + \phi(2) = (1, 0) + (0, 1) + (0, 0) = \mathbf{(1, 1)}$
+</p>
+
+<p>States the expert visited: $V_E = \{0, 1, 2\}$. Non-expert states: $\{3, 4, 5\}$.</p>
+
+<h3>Step 2 · Build the per-state Hamming loss</h3>
+
+<p>$L(s) = 1$ if $s$ is not on the expert's path, else 0:</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>state</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead>
+<tbody>
+<tr><td>$L(s)$</td><td>0</td><td>0</td><td>0</td><td><strong>1</strong></td><td><strong>1</strong></td><td><strong>1</strong></td></tr>
+</tbody></table></div>
+
+<p>The bottom row (which the expert avoided) carries a 1-unit "bonus", the loss-augmented planner will see those cells as cheaper than they really are.</p>
+
+<h3>Step 3 · MMP iteration 0, initial $w$</h3>
+
+<p>Start with a random non-negative weight vector. Say <strong>$w = (0.3, 0.7)$</strong>, grass costs 0.3, road costs 0.7.</p>
+
+<p>Current cost map $c(s) = w \cdot \phi(s)$:</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>state</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead>
+<tbody>
+<tr><td>$c(s)$</td><td>0.3</td><td>0.7</td><td>0</td><td>0.3</td><td>0.3</td><td>0.3</td></tr>
+</tbody></table></div>
+
+<p>Note that under this random init, <em>grass is cheaper than road</em>, the opposite of the truth. The algorithm has to fix this.</p>
+
+<h3>Step 4 · Compute the loss-augmented cost $c'(s) = c(s) - L(s)$</h3>
+
+<div class="table-wrap"><table>
+<thead><tr><th>state</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead>
+<tbody>
+<tr><td>$c(s)$</td><td>0.3</td><td>0.7</td><td>0</td><td>0.3</td><td>0.3</td><td>0.3</td></tr>
+<tr><td>$L(s)$</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td><td>1</td></tr>
+<tr><td>$c'(s)$</td><td>0.3</td><td>0.7</td><td>0</td><td><strong>−0.7</strong></td><td><strong>−0.7</strong></td><td><strong>−0.7</strong></td></tr>
+</tbody></table></div>
+
+<p>The bottom-row cells now have <em>negative</em> cost, visiting them <em>saves</em> 0.7 each. The augmented planner will be tempted to detour.</p>
+
+<h3>Step 5 · Find the worst-violator path $\xi^*$</h3>
+
+<p>Plan the minimum-cost path from state 0 to state 2 under $c'$. Some candidate paths and their augmented cost:</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>path</th><th>sum of $c'$</th></tr></thead>
+<tbody>
+<tr><td>0 → 1 → 2 (the expert path)</td><td>0.3 + 0.7 + 0 = <strong>1.0</strong></td></tr>
+<tr><td>0 → 3 → 4 → 5 → 2 (the long detour)</td><td>0.3 + (−0.7) + (−0.7) + (−0.7) + 0 = <strong>−1.8</strong></td></tr>
+<tr><td>0 → 3 → 4 → 1 → 2</td><td>0.3 + (−0.7) + (−0.7) + 0.7 + 0 = −0.4</td></tr>
+<tr><td>0 → 1 → 4 → 5 → 2</td><td>0.3 + 0.7 + (−0.7) + (−0.7) + 0 = −0.4</td></tr>
+</tbody>
+</table></div>
+
+<p>
+The cheapest under the loss-augmented cost is the long detour through
+the bottom row: $\xi^* = (0, 3, 4, 5, 2)$, cost $-1.8$. This is the
+"worst violator", the path the algorithm wants to make more
+expensive.
+</p>
+
+<p>Feature counts of $\xi^*$:</p>
+<p style="text-align: center">
+$f^* = \phi(0) + \phi(3) + \phi(4) + \phi(5) + \phi(2) = (1, 0) + (1, 0) + (1, 0) + (1, 0) + (0, 0) = \mathbf{(4, 0)}$
+</p>
+
+<h3>Step 6 · Compute the subgradient and apply the update</h3>
+
+<p>
+We use the update from Section 8 Step 4 with <strong>$\lambda = 0$ (no
+L2 regularisation)</strong>, to keep the arithmetic clean. With
+$\lambda = 0$ the shrinkage factor $(1 - \eta\lambda)$ becomes 1, so
+the update reduces to the bare subgradient step
+$w \leftarrow w + \eta \cdot \big(f^* - f_E\big)$. (A real run would
+keep a small positive $\lambda$ to bound the weights; here it would
+only add a tiny shrinkage and clutter the numbers.) The update
+direction is <em>violator features minus expert features</em>:
+</p>
+
+<p style="text-align: center">
+$f^* - f_E = (4, 0) - (1, 1) = \mathbf{(+3, -1)}$
+</p>
+
+<p><em>Reading this:</em></p>
+<ul>
+<li>$+3$ on grass: the violator visited grass 3 more times than the expert. Raise $w_{\text{grass}}$ to discourage grass.</li>
+<li>$-1$ on road: the expert visited road 1 more time than the violator. Lower $w_{\text{road}}$ to encourage road.</li>
+</ul>
+
+<p>With $\eta = 0.5$:</p>
+<p style="text-align: center">
+$w_{\text{new}} = w + \eta \cdot \big(f^* - f_E\big) = (0.3, 0.7) + 0.5 \cdot (+3, -1) = (0.3 + 1.5, \; 0.7 - 0.5) = \mathbf{(1.8, \; 0.2)}$
+</p>
+
+<p>After projecting to non-negative orthant (both entries already $\geq 0$): $w = (1.8, 0.2)$.</p>
+
+<h3>Step 7 · Compute the slack at this iteration</h3>
+
+<p>The "violation" the algorithm just measured:</p>
+
+<p style="text-align: center">
+slack$_E = \ell(\xi^*) - w \cdot (f^* - f_E)$
+</p>
+
+<p>$\ell(\xi^*) = L(0) + L(3) + L(4) + L(5) + L(2) = 0 + 1 + 1 + 1 + 0 = 3$ (three non-expert cells visited).</p>
+<p>$f^* - f_E = (4, 0) - (1, 1) = (3, -1)$.</p>
+<p>$w \cdot (3, -1) = 0.3 \cdot 3 + 0.7 \cdot (-1) = 0.9 - 0.7 = 0.2$.</p>
+<p>slack $= 3 - 0.2 = \mathbf{2.8}$.</p>
+
+<p>2.8 is large, the algorithm has work to do.</p>
+
+<h3>Step 8 · Iteration 1, recompute everything with the new $w$</h3>
+
+<p>$w = (1.8, 0.2)$. Cost map:</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>state</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead>
+<tbody>
+<tr><td>$c(s)$</td><td>1.8</td><td>0.2</td><td>0</td><td>1.8</td><td>1.8</td><td>1.8</td></tr>
+</tbody></table></div>
+
+<p>Now grass is much more expensive than road. ✓</p>
+
+<p>Loss-augmented cost:</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>state</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead>
+<tbody>
+<tr><td>$c'(s)$</td><td>1.8</td><td>0.2</td><td>0</td><td>0.8</td><td>0.8</td><td>0.8</td></tr>
+</tbody></table></div>
+
+<p>Even with the 1-unit bonus on the bottom row, those cells still cost 0.8 each, not enough to compete with road at 0.2.</p>
+
+<p>Find $\xi^*$ now:</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>path</th><th>sum of $c'$</th></tr></thead>
+<tbody>
+<tr><td>0 → 1 → 2 (expert path)</td><td>1.8 + 0.2 + 0 = <strong>2.0</strong></td></tr>
+<tr><td>0 → 3 → 4 → 5 → 2</td><td>1.8 + 0.8 + 0.8 + 0.8 + 0 = 4.2</td></tr>
+<tr><td>0 → 3 → 4 → 1 → 2</td><td>1.8 + 0.8 + 0.8 + 0.2 + 0 = 3.6</td></tr>
+</tbody>
+</table></div>
+
+<p>The cheapest is now <strong>the expert path itself</strong>. $\xi^* = (0, 1, 2)$, same as $\xi_E$.</p>
+
+<p>Subgradient: $g = f_E - f^* = (1, 1) - (1, 1) = (0, 0)$. No update.</p>
+
+<p>Slack: $\ell(\xi^*) = 0$ (no non-expert cells), $w \cdot (f^* - f_E) = 0$. slack $= 0$.</p>
+
+<p><strong>Converged.</strong> 🎉</p>
+
+<h3>Step 9 · What we recovered (the final answer)</h3>
+
+<p>After one iteration, the loss-augmented planner under $w = (1.8, 0.2)$ returns the expert's path itself. The algorithm has converged.</p>
+
+<h4>The final recovered policy, state by state</h4>
+
+<p>
+Unlike Abbeel-Ng, MMP doesn't output a mixture of candidate policies.
+It outputs a single cost vector $w$, and the "policy" is implicit: it's
+whatever a planner produces from $w$. Here's what the planner produces
+on this 2×3 grid, for every starting state:
+</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>start state</th><th>terrain</th><th>best action</th><th>resulting trajectory</th><th>total cost under $w$</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>grass (S)</td><td>E (go to 1)</td><td>$0 \to 1 \to 2$</td><td>$1.8 + 0.2 + 0 = 2.0$</td></tr>
+<tr><td>1</td><td>road</td><td>E (go to 2)</td><td>$1 \to 2$</td><td>$0.2 + 0 = 0.2$</td></tr>
+<tr><td>2</td><td>goal</td><td>absorbing</td><td>$2$</td><td>$0$</td></tr>
+<tr><td>3</td><td>grass</td><td>N (go to 0) then E, E</td><td>$3 \to 0 \to 1 \to 2$</td><td>$1.8 + 1.8 + 0.2 + 0 = 3.8$</td></tr>
+<tr><td>4</td><td>grass</td><td>N (go to 1) then E</td><td>$4 \to 1 \to 2$</td><td>$1.8 + 0.2 + 0 = 2.0$</td></tr>
+<tr><td>5</td><td>grass</td><td>N (go to 2)</td><td>$5 \to 2$</td><td>$1.8 + 0 = 1.8$</td></tr>
+</tbody></table></div>
+
+<p>
+The recovered policy at every non-goal state: <em>get to the road or
+goal as fast as possible, then ride the road home</em>. Starting at the
+official start state (0), this produces the expert's trajectory exactly.
+Starting elsewhere, the policy is what you'd want a sensible agent to
+do, but those starts weren't demonstrated, so the recovered policy
+there is just whatever falls out of running a planner on the recovered
+$w$.
+</p>
+
+<h4>Side-by-side comparison against the expert</h4>
+
+<div class="table-wrap"><table>
+<thead><tr><th>quantity</th><th>true (hidden)</th><th>recovered by MMP</th><th>match?</th></tr></thead>
+<tbody>
+<tr><td>cost weights $w$</td><td>$(1.0, \; 0.2)$</td><td>$(1.8, \; 0.2)$</td><td>road exact, grass 1.8× too high</td></tr>
+<tr><td>cost of state 0 (grass)</td><td>$1.0$</td><td>$1.8$</td><td>off</td></tr>
+<tr><td>cost of state 1 (road)</td><td>$0.2$</td><td>$0.2$</td><td>Yes</td></tr>
+<tr><td>cost ordering (grass vs road)</td><td>grass &gt; road</td><td>grass &gt; road</td><td>Yes</td></tr>
+<tr><td>planner's optimal path from state 0</td><td>$0 \to 1 \to 2$</td><td>$0 \to 1 \to 2$</td><td>Yes</td></tr>
+<tr><td>total path cost under recovered $w$</td><td>$1.0 + 0.2 + 0 = 1.2$</td><td>$1.8 + 0.2 + 0 = 2.0$</td><td>different scale, same minimiser</td></tr>
+<tr><td>matches expert demonstration?</td><td>by construction</td><td><strong>yes</strong></td><td>Yes</td></tr>
+</tbody></table></div>
+
+<p>
+The recovered <strong>policy</strong> (the "go through the road" path)
+is exactly the expert's. The recovered <strong>cost vector</strong> has
+the right ordering and gets road exactly right, but grass came out
+1.8× too high. This is the typical MMP outcome on under-constrained
+problems: ordering correct, magnitude off, policy correct.
+</p>
+
+<h3>What does the recovered cost give you on a NEW map?</h3>
+
+<p>
+This is the answer to "why bother recovering a cost at all instead of
+just using Abbeel-Ng?" Suppose tomorrow you get a new map: an L-shaped
+corridor where the same kinds of terrain appear in different places.
+Hand the recovered $w = (1.8, 0.2)$ to a planner on the new map and it
+returns the road-hugging path automatically. <strong>The cost
+transfers because it depends only on terrain type, not on the specific
+map layout.</strong> Abbeel-Ng's policy-mixture output, by contrast, is
+tied to the original map and gives nonsense on the new one.
+</p>
+
+<div class="note">
+<strong>Why the recovered $w$ differs from the true $w$:</strong>
+because both vectors produce the same expert path under loss-
+augmented planning. From the demonstration alone, the algorithm
+cannot distinguish $(1, 0.2)$ from $(1.8, 0.2)$, both make the
+expert's path cheapest. The Hamming-loss term picks "one" of the
+many consistent $w$'s, biased by initialisation and step size. Adding
+more demonstrations (especially on cells the expert in this example
+avoided, like water and mountain) would tighten the recovery.
+</div>
+
+<div class="widget" id="w-mmp-sliders">
+  <div class="widget-header">
+    <div class="widget-title">Cost recovery, by hand · drag the sliders</div>
+    <span class="widget-badge interactive">Interactive</span>
+  </div>
+  <div class="widget-body">
+    <p style="font-size:14.5px;color:#333;margin:0 0 4px">
+      A 4x6 gridworld with mixed terrain. The expert (the gold path) takes the
+      cheapest route under the true weights, hugging the road. You control the
+      cost weights below. The blue path is what a planner currently produces.
+      Adjust the sliders until your planner matches the expert.
+    </p>
+    <div class="widget-row">
+      <div class="widget-stage">
+        <svg class="interactive" id="mmp-grid" viewBox="0 0 360 240" width="100%" style="max-width:380px"></svg>
+        <div class="legend" style="justify-content:center;margin-top:8px">
+          <span><i style="background:#9ddb83"></i>grass</span>
+          <span><i style="background:#d6d6d6"></i>road</span>
+          <span><i style="background:#f3e2a9"></i>sand</span>
+          <span><i style="background:#82bdf0"></i>water</span>
+          <span><i style="background:#7c5e3f"></i>mountain</span>
+          <span><i style="background:gold"></i>expert path</span>
+          <span><i style="background:#3a6dd2"></i>your path</span>
+        </div>
+      </div>
+      <div class="widget-side">
+        <div class="slider-row"><label>grass</label><input type="range" id="mmp-w0" min="0" max="20" step="0.1" value="3"><span class="val" id="mmp-w0v">3.0</span></div>
+        <div class="slider-row"><label>road</label><input type="range" id="mmp-w1" min="0" max="20" step="0.1" value="3"><span class="val" id="mmp-w1v">3.0</span></div>
+        <div class="slider-row"><label>sand</label><input type="range" id="mmp-w2" min="0" max="20" step="0.1" value="3"><span class="val" id="mmp-w2v">3.0</span></div>
+        <div class="slider-row"><label>water</label><input type="range" id="mmp-w3" min="0" max="20" step="0.1" value="3"><span class="val" id="mmp-w3v">3.0</span></div>
+        <div class="slider-row"><label>mountain</label><input type="range" id="mmp-w4" min="0" max="20" step="0.1" value="3"><span class="val" id="mmp-w4v">3.0</span></div>
+        <div class="status-strip" style="margin-top:10px;flex-direction:column;gap:6px">
+          <span class="pill">your path cost <b id="mmp-cost">,</b></span>
+          <span class="pill">expert path cost (under your $w$) <b id="mmp-expert-cost">,</b></span>
+          <span class="pill">violation = expert cost - your cost <b id="mmp-violation">,</b></span>
+          <span class="pill">matches expert path? <b id="mmp-match">,</b></span>
+        </div>
+        <div class="controls" style="margin-top:8px">
+          <button class="btn secondary" id="mmp-truth">Snap to true weights</button>
+          <button class="btn ghost" id="mmp-rand">Randomise</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // terrain map: 0 grass, 1 road, 2 sand, 3 water, 4 mountain
+  const map = [
+    [0,1,1,1,1,0],
+    [0,0,2,2,1,0],
+    [0,3,2,4,1,1],
+    [0,0,0,0,0,0]
+  ];
+  const R = map.length, C = map[0].length;
+  const colors = ['#9ddb83','#d6d6d6','#f3e2a9','#82bdf0','#7c5e3f'];
+  const start = [0,0], goal = [3,5];
+  const trueW = [1.0, 0.2, 2.0, 5.0, 8.0];
+  const svg = document.getElementById('mmp-grid');
+  const W = 360, HG = 240;
+  const cellSize = Math.min((W-20) / C, (HG-20) / R);
+  const offX = (W - cellSize*C) / 2;
+  const offY = (HG - cellSize*R) / 2;
+  // draw cells
+  const cellsG = IRL.svgEl('g', {}, svg);
+  const costTextG = IRL.svgEl('g', {}, svg);
+  const pathExpertG = IRL.svgEl('g', {}, svg);
+  const pathLearnerG = IRL.svgEl('g', {}, svg);
+  const markersG = IRL.svgEl('g', {}, svg);
+  const costTextRefs = []; // [r][c] -> SVGTextElement, so we can update labels live
+  for (let r = 0; r < R; r++) {
+    costTextRefs.push([]);
+    for (let c = 0; c < C; c++) {
+      IRL.svgEl('rect', {
+        x: offX + c*cellSize, y: offY + r*cellSize, width: cellSize, height: cellSize,
+        fill: colors[map[r][c]], stroke: '#fff', 'stroke-width': 0.8
+      }, cellsG);
+      // small cost label in each cell
+      const label = IRL.svgEl('text', {
+        x: offX + c*cellSize + cellSize/2,
+        y: offY + r*cellSize + cellSize/2 + 4,
+        'font-size': 10.5,
+        'text-anchor': 'middle',
+        fill: '#1b1b1b',
+        'font-family': 'JetBrains Mono, SF Mono, Menlo, monospace',
+        'font-weight': 600,
+        'pointer-events': 'none'
+      }, costTextG);
+      costTextRefs[r].push(label);
+    }
+  }
+  // start dot, goal star
+  const xy = ([r,c]) => [offX + c*cellSize + cellSize/2, offY + r*cellSize + cellSize/2];
+  const [sx, sy] = xy(start);
+  IRL.svgEl('circle', { cx: sx, cy: sy, r: 6, fill:'black', stroke:'white', 'stroke-width':1.5 }, markersG);
+  const [gx, gy] = xy(goal);
+  let sp = '';
+  for (let k = 0; k < 10; k++) {
+    const a = -Math.PI/2 + k*Math.PI/5;
+    const rr = k % 2 === 0 ? 8 : 4;
+    sp += `${gx+rr*Math.cos(a)},${gy+rr*Math.sin(a)} `;
+  }
+  IRL.svgEl('polygon', { points: sp, fill:'gold', stroke:'black', 'stroke-width':1 }, markersG);
+
+  const expertCost = trueW;
+  const expertPath = IRL.gridShortestPath(map, expertCost, start, goal).path;
+  function drawPath(g, path, color, width, dash) {
+    IRL.clear(g);
+    if (!path.length) return;
+    const pts = path.map(xy).map(p => p.join(',')).join(' ');
+    IRL.svgEl('polyline', {
+      points: pts, fill:'none', stroke: color, 'stroke-width': width,
+      'stroke-linejoin':'round','stroke-linecap':'round',
+      ...(dash ? { 'stroke-dasharray': dash } : {})
+    }, g);
+  }
+  drawPath(pathExpertG, expertPath, 'gold', 5.5, null);
+
+  function pathsEqual(a, b) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (a[i][0] !== b[i][0] || a[i][1] !== b[i][1]) return false;
+    return true;
+  }
+
+  function pathCostUnder(path, w) {
+    let total = 0;
+    for (const [r, c] of path) total += w[map[r][c]];
+    return total;
+  }
+  function update() {
+    const w = [0,1,2,3,4].map(i => parseFloat(document.getElementById('mmp-w'+i).value));
+    for (let i = 0; i < 5; i++) document.getElementById('mmp-w'+i+'v').textContent = w[i].toFixed(1);
+    // Update per-cell cost labels
+    for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
+      costTextRefs[r][c].textContent = w[map[r][c]].toFixed(1);
+    }
+    const res = IRL.gridShortestPath(map, w, start, goal);
+    drawPath(pathLearnerG, res.path, '#3a6dd2', 3, '4,3');
+    const learnerCost = res.dist;
+    const expertCostNow = pathCostUnder(expertPath, w);
+    const violation = expertCostNow - learnerCost;
+    document.getElementById('mmp-cost').textContent = learnerCost.toFixed(2);
+    document.getElementById('mmp-expert-cost').textContent = expertCostNow.toFixed(2);
+    const vEl = document.getElementById('mmp-violation');
+    vEl.textContent = violation > 0.001 ? '+' + violation.toFixed(2) + ' (expert paying more than learner)' : violation.toFixed(2);
+    vEl.style.color = violation > 0.001 ? '#9b2929' : '#1d5a30';
+    const match = pathsEqual(res.path, expertPath);
+    const m = document.getElementById('mmp-match');
+    m.textContent = match ? 'yes ✓' : 'no';
+    m.style.color = match ? '#1d5a30' : '#9b2929';
+  }
+  for (let i = 0; i < 5; i++) document.getElementById('mmp-w'+i).addEventListener('input', update);
+  document.getElementById('mmp-truth').addEventListener('click', () => {
+    trueW.forEach((v, i) => document.getElementById('mmp-w'+i).value = v);
+    update();
+  });
+  document.getElementById('mmp-rand').addEventListener('click', () => {
+    for (let i = 0; i < 5; i++) document.getElementById('mmp-w'+i).value = (Math.random()*15 + 1).toFixed(1);
+    update();
+  });
+  update();
+})();
+</script>
+</div>
+</details>
+
+<!-- ============================================================ -->
+<h2 id="both">Both algorithms compared</h2>
+
+<div class="table-wrap"><table>
+<thead><tr><th></th><th>Abbeel-Ng (2004)</th><th>MMP (2006)</th></tr></thead>
+<tbody>
+<tr><td>Goal</td><td>match expert's visit counts</td><td>make expert's path cheapest under recovered cost</td></tr>
+<tr><td>Output</td><td>a policy mixture</td><td>a cost vector $w$</td></tr>
+<tr><td>Useful when</td><td>you just want to imitate</td><td>you want a cost to plan with in <em>new</em> environments</td></tr>
+<tr><td>Recovers the true cost?</td><td>no, doesn't try</td><td>no, but recovered cost is structurally usable</td></tr>
+<tr><td>Inner loop</td><td>direction-finding (SVM) + planning</td><td>loss-augmented planning + cost adjustment</td></tr>
+<tr><td>Number of iterations</td><td>~5 on our gridworld</td><td>~10-100 on our gridworld</td></tr>
+</tbody></table></div>
+
+<p>The big practical difference is <strong>transfer</strong>. If you
+move to a new map with the same terrain types, MMP's cost vector still
+applies: plug it into a planner on the new map, get a sensible
+policy. Abbeel-Ng's policy mixture is tied to the original map; on a
+new map it's useless. In practice this is the most important reason to
+prefer MMP when you have any chance of needing the recovered cost
+function on a different environment.</p>
+
+<!-- ============================================================ -->
+<h2 id="conclusion">Conclusion: two landmark papers and what they leave open</h2>
+
+<p>
+We walked through two landmark papers from the early 2000s.
+<strong>Apprenticeship Learning</strong> (Abbeel and Ng, 2004) recovered
+a policy that matches the expert's terrain-visit histogram by iteratively
+collecting candidate policies and mixing them. <strong>Maximum Margin
+Planning</strong> (Ratliff, Bagnell and Zinkevich, 2006) recovered a
+portable cost function by demanding that the expert's path be cheaper
+than every alternative by at least the Hamming distance, and then
+finding the worst violator with a single loss-augmented planner call.
+</p>
+
+<p>
+Both algorithms work. Both rest on the same structural skeleton, match
+expert features through some intermediate representation, which is the
+pattern that carries forward to every modern IRL algorithm. They are
+the right place for a reader new to the field to start.
+</p>
+
+<!-- ============================================================ -->
+<h2 id="appendix-dotproduct">Appendix A. Why w* = v / ‖v‖ maximises the dot product</h2>
+
+<p>
+This appendix proves the closed-form result used in section 6: given a
+fixed vector $v \in \mathbb R^n$, the maximum of $w \cdot v$ over all
+$w$ with $\|w\| \leq 1$ is achieved at $w^* = v / \|v\|$, and the
+maximum value equals $\|v\|$. Three proofs follow, each making the
+same statement from a different angle. They are not redundant: each one
+gives a different intuition that's worth carrying forward.
+</p>
+
+<details class="proof-box">
+<summary>Proof A.1 (Cauchy-Schwarz)</summary>
+<div class="proof-content">
+
+<p>
+The Cauchy-Schwarz inequality says that for any two vectors
+$a, b \in \mathbb R^n$:
+</p>
+
+<p style="text-align:center; margin: 10px 0">$|a \cdot b| \leq \|a\| \cdot \|b\|$</p>
+
+<p>
+with equality if and only if one is a non-negative scalar multiple of
+the other (they point in the same direction).
+</p>
+
+<p>Apply this to $w$ and $v$, using the constraint $\|w\| \leq 1$:</p>
+
+<p style="text-align:center; margin: 10px 0">$w \cdot v \;\leq\; |w \cdot v| \;\leq\; \|w\| \cdot \|v\| \;\leq\; 1 \cdot \|v\| \;=\; \|v\|.$</p>
+
+<p>
+So $\|v\|$ is an upper bound on $w \cdot v$. Now we need to show this
+bound is achieved. Pick $w = v / \|v\|$. Compute:
+</p>
+
+<p style="text-align:center; margin: 10px 0">$w \cdot v \;=\; \dfrac{v}{\|v\|} \cdot v \;=\; \dfrac{v \cdot v}{\|v\|} \;=\; \dfrac{\|v\|^2}{\|v\|} \;=\; \|v\|.$</p>
+
+<p>And the norm constraint is satisfied:</p>
+
+<p style="text-align:center; margin: 10px 0">$\|w\| \;=\; \left\| \dfrac{v}{\|v\|} \right\| \;=\; \dfrac{\|v\|}{\|v\|} \;=\; 1 \leq 1. \;\;\checkmark$</p>
+
+<p>
+So $w^* = v / \|v\|$ achieves the upper bound, and is therefore the
+maximiser. <span class="qed">∎</span>
+</p>
+
+</div>
+</details>
+
+<details class="proof-box">
+<summary>Proof A.2 (geometric, the picture)</summary>
+<div class="proof-content">
+
+<p>The dot product has a geometric definition:</p>
+
+<p style="text-align:center; margin: 10px 0">$w \cdot v \;=\; \|w\| \cdot \|v\| \cdot \cos\theta$</p>
+
+<p>where $\theta$ is the angle between $w$ and $v$. So:</p>
+
+<p style="text-align:center; margin: 10px 0">$w \cdot v \;\leq\; \|w\| \cdot \|v\| \cdot 1 \;=\; \|w\| \cdot \|v\|$</p>
+
+<p>
+with equality when $\cos\theta = 1$, that is, $\theta = 0$, that is,
+$w$ and $v$ point in the <strong>same direction</strong>. Under the
+constraint $\|w\| \leq 1$, the right-hand side is at most $\|v\|$, with
+equality when $\|w\| = 1$.
+</p>
+
+<p>So to maximise the dot product we need two things at once:</p>
+
+<ul>
+<li>Make $\|w\|$ as large as the constraint allows. Set $\|w\| = 1$, saturate the constraint.</li>
+<li>Make $\cos\theta$ as large as possible. Set $w$ parallel to $v$.</li>
+</ul>
+
+<p>
+The unique vector satisfying both is $w^* = v / \|v\|$. The picture:
+$w^*$ is the unit arrow pointing exactly the way $v$ points. Any other
+direction loses you $\cos\theta$; any shorter vector loses you $\|w\|$.
+<span class="qed">∎</span>
+</p>
+
+</div>
+</details>
+
+<details class="proof-box">
+<summary>Proof A.3 (Lagrangian, the rigorous version)</summary>
+<div class="proof-content">
+
+<p>
+Set up the constrained optimisation. Use $\|w\|^2 \leq 1$ (the squared
+norm) so the constraint is smooth:
+</p>
+
+<p style="text-align:center; margin: 10px 0">$\max_w \; w \cdot v \quad\text{subject to}\quad w \cdot w \leq 1.$</p>
+
+<p>The Lagrangian is:</p>
+
+<p style="text-align:center; margin: 10px 0">$\mathcal L(w, \lambda) \;=\; w \cdot v \;-\; \lambda \, (w \cdot w - 1)$</p>
+
+<p>with $\lambda \geq 0$. Stationarity, set $\nabla_w \mathcal L = 0$:</p>
+
+<p style="text-align:center; margin: 10px 0">$v - 2\lambda w \;=\; 0 \quad\Longrightarrow\quad w \;=\; \dfrac{v}{2\lambda}.$</p>
+
+<p>
+So $w$ must be parallel to $v$. For the unconstrained maximum to be
+bounded, the constraint must be active (otherwise $w$ could grow
+without bound and so could $w \cdot v$), so $w \cdot w = 1$, giving:
+</p>
+
+<p style="text-align:center; margin: 10px 0">$\left\| \dfrac{v}{2\lambda} \right\|^2 \;=\; 1 \quad\Longrightarrow\quad \dfrac{\|v\|^2}{4\lambda^2} \;=\; 1 \quad\Longrightarrow\quad 2\lambda \;=\; \|v\|.$</p>
+
+<p>Plugging back:</p>
+
+<p style="text-align:center; margin: 10px 0">$w^* \;=\; \dfrac{v}{2\lambda} \;=\; \dfrac{v}{\|v\|}.$</p>
+
+<p>
+The optimal Lagrange multiplier $\lambda^* = \|v\| / 2$ measures how
+much the optimum would increase per unit relaxation of the norm
+constraint. Bigger $\|v\|$ means more room to grow $w \cdot v$ if we
+were allowed to let $\|w\|$ exceed 1. <span class="qed">∎</span>
+</p>
+
+</div>
+</details>
+
+<div class="note">
+<strong>What this means in the IRL context.</strong> In Abbeel-Ng's
+first iteration, $v = f_E - f_0$ is the difference in feature space
+from the candidate to the expert. We want a unit-norm reward weight
+vector that scores the expert as high as possible above the candidate.
+All three proofs say the same thing: <em>the reward weights should
+point in the direction of expert minus candidate</em>. Anything else,
+you're either pointing partly sideways (losing $\cos\theta$) or using
+a sub-unit-length vector (losing magnitude).
+</div>
+
+<p>
+The intuition to carry forward: the gradient of $w \cdot v$ with
+respect to $w$ is just $v$. So if you're at $w = 0$ and you want to
+grow $w \cdot v$ as fast as possible, you walk in the direction $v$.
+You stop when you hit the boundary $\|w\| = 1$. That walk ends at
+$w^* = v / \|v\|$. This same gradient-flow intuition is exactly what
+ends up powering policy gradient methods later in the modern RL
+literature.
+</p>
+
+<!-- ============================================================ -->
+<h2 id="appendix-duality">Appendix B. The SVM-step / convex-hull duality (Abbeel-Ng)</h2>
+
+<p>
+The walk-through claimed that Abbeel-Ng's "find a separating direction"
+step is equivalent to "project the expert onto the convex hull of
+candidates." Both formulations return the same direction $w$. This
+appendix proves it.
+</p>
+
+<h3>The direction-finding problem</h3>
+
+<p style="text-align:center; font-size:15.5px; margin: 14px 0">
+$\displaystyle \max_{w,\,t}\;t \quad\text{s.t.}\quad w \cdot (f_E - f_j) \geq t \;\;\forall j,\quad \|w\| \leq 1.$
+</p>
+
+<h3>The claim</h3>
+
+<p>
+The maximum margin $t^*$ equals the Euclidean distance from $f_E$ to
+the convex hull of $\{f_0, \ldots, f_{k-1}\}$, and the optimal direction
+$w^*$ is the unit vector from the closest hull point toward $f_E$.
+</p>
+
+<h3>Proof, direction 1: $t \leq$ distance to hull</h3>
+
+<p>
+Take any feasible $(w, t)$ and any convex combination $\bar f = \sum_j
+\lambda_j f_j$ in the hull. The convex combination of the constraints
+gives $w \cdot (f_E - \bar f) \geq t$. Cauchy-Schwarz with $\|w\| \leq 1$
+gives $w \cdot (f_E - \bar f) \leq \|f_E - \bar f\|$. So $t \leq \|f_E
+- \bar f\|$ for every $\bar f$ in the hull. Hence $t$ is at most the
+distance from $f_E$ to the hull.
+</p>
+
+<h3>Proof, direction 2: this bound is achievable</h3>
+
+<p>
+Let $\bar f^*$ be the closest hull point to $f_E$. The projection
+theorem of convex analysis says $(f_E - \bar f^*) \cdot (y - \bar f^*)
+\leq 0$ for any $y$ in the hull. Apply this with $y = f_j$ and
+rearrange: $(f_E - \bar f^*) \cdot (f_E - f_j) \geq \|f_E - \bar f^*\|^2$.
+Set $w^* = (f_E - \bar f^*) / \|f_E - \bar f^*\|$. This $w^*$ achieves
+margin $\|f_E - \bar f^*\|$ exactly. So the maximum margin equals the
+distance from $f_E$ to the hull. <span style="float:right; font-weight:700">∎</span>
+</p>
+
+<h3>The takeaway</h3>
+
+<p>
+The SVM step is geometrically just "point the cost direction from the
+closest hull point toward the expert." That is why the projection
+method (which directly tracks the closest hull point) gives the same
+answer as the SVM. The polytope widget earlier in the post is
+literally drawing this picture: each iteration adds a vertex to the
+convex hull, and the dashed red line from $f_E$ to the closest hull
+point is the direction $w^*$ that Abbeel-Ng's SVM step computes.
+</p>
+
+<!-- ============================================================ -->
+<h2 id="refs">References &amp; further reading</h2>
+
+<ul>
+<li>Abbeel, P. &amp; Ng, A. Y. (2004). <strong>Apprenticeship Learning via Inverse Reinforcement Learning.</strong> ICML.</li>
+<li>Ratliff, N., Bagnell, J. A., &amp; Zinkevich, M. (2006). <strong>Maximum Margin Planning.</strong> ICML. (The MMP paper. The theory section here is a distillation of sections 2 and 3.)</li>
+<li>Tsochantaridis, I., Joachims, T., Hofmann, T., &amp; Altun, Y. (2005). <strong>Large Margin Methods for Structured and Interdependent Output Variables.</strong> JMLR. (The structured-SVM foundation MMP builds on. Read for the loss-augmented inference framework in its general form.)</li>
+<li>Ng, A. Y. &amp; Russell, S. (2000). <strong>Algorithms for Inverse Reinforcement Learning.</strong> ICML. (The original "many costs explain the same expert" paper.)</li>
+<li>Every number in this post comes from an actual run of the algorithms; the interactive widgets embedded throughout the post let you reproduce each iteration step by step.</li>
+</ul>
+<script>
+(function () {
+  const terrain = JSON.parse(document.getElementById('terrain-data').textContent);
+  const TNAMES = ['grass','road','sand','water','mountain'];
+  const colors = {0:'#9ddb83',1:'#d6d6d6',2:'#f3e2a9',3:'#82bdf0',4:'#7c5e3f'};
+  const cellsG = document.getElementById('grid-cells');
+  const pathG = document.getElementById('path-overlay');
+  const dotG = document.getElementById('path-dot');
+  const CELL = 26;
+  for (let r = 0; r < 12; r++) for (let c = 0; c < 12; c++) {
+    const rect = IRL.svgEl('rect', {
+      x: c*CELL+4, y: r*CELL+4, width: CELL, height: CELL,
+      fill: colors[terrain[r][c]], stroke: '#fff', 'stroke-width': 0.5
+    }, cellsG);
+  }
+  const expert = [[0,0],[0,1],[1,1],[1,2],[1,3],[1,4],[1,5],[1,6],
+                  [2,6],[3,6],[4,6],[5,6],[5,7],[5,8],[5,9],[5,10],
+                  [6,10],[7,10],[8,10],[9,10],[10,10],[10,11],[11,11]];
+  const xy = ([r,c]) => [c*CELL+CELL/2+4, r*CELL+CELL/2+4];
+  // build path polyline (initially empty)
+  const poly = IRL.svgEl('polyline', {
+    points: '', fill: 'none', stroke: '#d23a3a', 'stroke-width': 2.8,
+    'stroke-linejoin': 'round', 'stroke-linecap': 'round'
+  }, pathG);
+  // start dot
+  const [sx, sy] = xy(expert[0]);
+  IRL.svgEl('circle', { cx: sx, cy: sy, r: 8, fill: 'black', stroke: 'white', 'stroke-width': 1.5 }, pathG);
+  // goal star
+  const [gx, gy] = xy(expert[expert.length-1]);
+  let sp = '';
+  for (let k = 0; k < 10; k++) {
+    const a = -Math.PI/2 + k*Math.PI/5;
+    const r = k%2===0 ? 10 : 5;
+    sp += `${gx+r*Math.cos(a)},${gy+r*Math.sin(a)} `;
+  }
+  IRL.svgEl('polygon', { points: sp, fill: 'gold', stroke: 'black' }, pathG);
+  // moving agent dot
+  const agent = IRL.svgEl('circle', { cx: sx, cy: sy, r: 6, fill: '#d23a3a', stroke: '#fff', 'stroke-width': 1.5, opacity: 0 }, dotG);
+
+  const stepLbl = document.getElementById('grid-step');
+  const terrLbl = document.getElementById('grid-terrain');
+  const playBtn = document.getElementById('grid-play');
+  const resetBtn = document.getElementById('grid-reset');
+  let timer = null, idx = 0;
+
+  function setStep(i) {
+    idx = i;
+    const pts = expert.slice(0, i+1).map(xy).map(p => p.join(',')).join(' ');
+    poly.setAttribute('points', pts);
+    const [ax, ay] = xy(expert[i]);
+    agent.setAttribute('cx', ax); agent.setAttribute('cy', ay);
+    agent.setAttribute('opacity', i > 0 ? 1 : 0);
+    stepLbl.innerHTML = `${i} / ${expert.length-1}`;
+    terrLbl.textContent = TNAMES[terrain[expert[i][0]][expert[i][1]]];
+  }
+  function play() {
+    if (timer) { stop(); return; }
+    if (idx >= expert.length - 1) setStep(0);
+    playBtn.textContent = '⏸ Pause';
+    timer = setInterval(() => {
+      if (idx >= expert.length - 1) { stop(); return; }
+      setStep(idx + 1);
+    }, 160);
+  }
+  function stop() {
+    if (timer) clearInterval(timer);
+    timer = null;
+    playBtn.textContent = idx >= expert.length - 1 ? '↻ Replay' : '▶ Animate';
+  }
+  function reset() { stop(); setStep(0); playBtn.textContent = '▶ Animate'; }
+
+  playBtn.addEventListener('click', play);
+  resetBtn.addEventListener('click', reset);
+  // initial state: show full path (since this is the figure for "what we see")
+  setStep(expert.length - 1);
+  playBtn.textContent = '↻ Replay animation';
+})();
+</script>
+            </div>
+
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">&copy; 2026 Aman Sharma. All rights reserved.</div>
+    </footer>
+
+    <script src="../assets/js/main.js"></script>
+    <script data-goatcounter="https://amananytime07.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

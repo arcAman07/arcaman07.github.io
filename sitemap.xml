@@ -16,13 +16,19 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://arcaman07.github.io/blog/can-llms-see-art.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
     <loc>https://arcaman07.github.io/projects.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://arcaman07.github.io/blog/inverse-rl-classical.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <lastmod>2026-05-28</lastmod>
+  </url>
+  <url>
+    <loc>https://arcaman07.github.io/blog/can-llms-see-art.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
   </url>
 </urlset>

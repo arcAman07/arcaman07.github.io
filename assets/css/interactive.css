@@ -1,0 +1,324 @@
+/* =============================================
+   Interactive widgets for IRL blog posts
+   Inherits from style.css / blog-post.css via CSS variables
+   Light + dark theme aware
+   ============================================= */
+
+.widget {
+    border: 1px solid var(--divider);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    margin: 2rem 0;
+    background: var(--bg);
+}
+.widget-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.9rem;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.widget-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-light);
+    font-weight: 500;
+}
+.widget-badge {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 500;
+    background: rgba(231,117,0,0.12);
+    color: var(--theme);
+    padding: 2px 9px;
+    border-radius: 999px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+html[data-theme="dark"] .widget-badge { background: rgba(38,152,186,0.18); }
+
+.widget-body { display: flex; flex-direction: column; gap: 14px; }
+.widget-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-start; }
+.widget-row.center { justify-content: center; align-items: center; }
+.widget-stage { flex: 1 1 320px; min-width: 280px; }
+.widget-side  { flex: 0 1 240px; min-width: 220px; }
+
+.widget-body p {
+    margin: 0 !important;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--text);
+}
+
+.controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 4px 0;
+}
+.btn {
+    border: 1px solid var(--theme);
+    background: var(--theme);
+    color: #fff;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 500;
+    padding: 5px 13px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.05s;
+    user-select: none;
+    line-height: 1.4;
+}
+.btn:hover { opacity: 0.85; }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn.secondary {
+    background: var(--bg);
+    color: var(--text);
+    border-color: var(--divider);
+}
+.btn.secondary:hover { background: rgba(0,0,0,0.04); opacity: 1; }
+html[data-theme="dark"] .btn.secondary:hover { background: rgba(255,255,255,0.06); }
+.btn.ghost {
+    background: transparent;
+    color: var(--text-light);
+    border-color: var(--divider);
+}
+.btn.ghost:hover { color: var(--text); opacity: 1; }
+
+.slider-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 64px;
+    gap: 10px;
+    align-items: center;
+    font-size: 12.5px;
+    margin: 2px 0;
+}
+.slider-row label { color: var(--text); font-weight: 400; }
+.slider-row input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 3px;
+    background: var(--divider);
+    border-radius: 3px;
+    outline: none;
+}
+.slider-row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--theme);
+    cursor: pointer;
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 0 1px var(--theme);
+}
+.slider-row input[type=range]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--theme);
+    cursor: pointer;
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 0 1px var(--theme);
+}
+.slider-row .val {
+    font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+    font-size: 11.5px;
+    color: var(--text);
+    text-align: right;
+    background: rgba(0,0,0,0.05);
+    border-radius: 3px;
+    padding: 2px 6px;
+}
+html[data-theme="dark"] .slider-row .val { background: rgba(255,255,255,0.08); }
+
+.status-strip {
+    background: rgba(0,0,0,0.03);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+    font-size: 11.5px;
+    color: var(--text);
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+html[data-theme="dark"] .status-strip { background: rgba(255,255,255,0.04); }
+.status-strip .pill { color: var(--text-light); }
+.status-strip .pill b { color: var(--text); font-weight: 500; }
+
+.legend {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--text);
+    margin-top: 4px;
+}
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.legend i {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border-radius: 2px;
+    border: 1px solid var(--divider);
+}
+
+.barchart { width: 100%; height: auto; }
+.bar { transition: height 0.4s, y 0.4s, fill 0.3s; }
+.bar-label { font-size: 11px; fill: var(--text-light); }
+.bar-value { font-size: 11px; fill: var(--text); font-family: 'SFMono-Regular', Consolas, Menlo, monospace; }
+
+svg.interactive {
+    display: block;
+    margin: 0 auto;
+    background: var(--bg);
+    border: 1px solid var(--divider);
+    border-radius: 6px;
+}
+svg.interactive .gridcell { transition: fill 0.3s; }
+
+.fade-in { animation: fadeIn 0.35s ease-out; }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(2px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Decision tree clickable chips for modern post */
+.choice-chip {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 400;
+    background: var(--bg);
+    border: 1px solid var(--divider);
+    color: var(--text);
+    padding: 4px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    margin: 2px 4px 2px 0;
+    user-select: none;
+    transition: all 0.15s;
+    line-height: 1.4;
+}
+.choice-chip:hover { border-color: var(--theme); color: var(--theme); }
+.choice-chip.selected {
+    background: var(--theme);
+    color: #fff;
+    border-color: var(--theme);
+}
+
+.qtable { font-family: 'SFMono-Regular', Consolas, Menlo, monospace; font-size: 12.5px; }
+.qtable td { transition: background 0.4s; }
+.qtable td.changed {
+    background: rgba(231,117,0,0.18) !important;
+}
+html[data-theme="dark"] .qtable td.changed {
+    background: rgba(38,152,186,0.22) !important;
+}
+
+/* Inline math fix: don't let MathJax inflate widget rows */
+.widget .MathJax { font-size: inherit !important; }
+
+/* Diagram captions inside posts */
+.diagram-caption {
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--text-light);
+    margin: -6px 0 1.5rem;
+    font-style: italic;
+}
+
+/* Static SVG diagrams */
+svg.diagram {
+    display: block;
+    margin: 1.5rem auto;
+    background: var(--bg);
+    border: 1px solid var(--divider);
+    border-radius: 6px;
+    padding: 10px;
+    max-width: 100%;
+}
+
+/* Aside / note blocks shared with posts */
+.note {
+    background: rgba(231,117,0,0.06);
+    border-left: 3px solid var(--theme);
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    font-size: 14.5px;
+    margin: 1.5rem 0;
+    line-height: 1.65;
+}
+html[data-theme="dark"] .note { background: rgba(38,152,186,0.08); }
+.note strong { color: var(--theme); font-weight: 500; }
+
+.aside {
+    background: rgba(0,0,0,0.03);
+    padding: 14px 18px;
+    border-radius: 6px;
+    font-size: 14.5px;
+    margin: 1.5rem 0;
+    line-height: 1.65;
+}
+html[data-theme="dark"] .aside { background: rgba(255,255,255,0.04); }
+.aside h4 {
+    margin: 0 0 0.5rem !important;
+    font-size: 11.5px !important;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-light) !important;
+    font-weight: 500;
+}
+.aside p:last-child { margin-bottom: 0 !important; }
+
+/* TOC */
+.toc {
+    background: rgba(0,0,0,0.02);
+    border: 1px solid var(--divider);
+    border-radius: 6px;
+    padding: 14px 20px;
+    margin: 1.5rem 0 2rem;
+    font-size: 13.5px;
+}
+html[data-theme="dark"] .toc { background: rgba(255,255,255,0.03); }
+.toc strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-light);
+    font-weight: 500;
+}
+.toc ol { margin: 4px 0 0; padding-left: 22px; line-height: 1.8; }
+.toc a { color: var(--text); text-decoration: none; }
+.toc a:hover { color: var(--theme); text-decoration: underline; }
+
+/* Inline kicker (used inside widgets) */
+.widget .kicker {
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-light);
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+/* MathJax containers and centered math */
+.math-display {
+    text-align: center;
+    font-size: 16px;
+    margin: 1rem 0;
+    overflow-x: auto;
+}
+
+@media (max-width: 600px) {
+    .widget-side, .widget-stage { flex-basis: 100%; }
+    .slider-row { grid-template-columns: 80px 1fr 56px; }
+}
