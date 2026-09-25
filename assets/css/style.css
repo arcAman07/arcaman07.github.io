@@ -227,6 +227,16 @@ img { max-width: 100%; }
 
 .clearfix::after { content: ''; display: table; clear: both; }
 
+/* ---------- Resume downloads ---------- */
+.resume-downloads { margin-top: 1.25rem; scroll-margin-top: 76px; }
+.resume-downloads h2 { font-size: 15px; font-weight: 500; margin-bottom: 8px; }
+.resume-downloads h2 span { margin-left: 8px; color: var(--text-light); font-size: 12px; font-weight: 300; }
+.resume-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.resume-links .pub-btn { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 14px; font-size: 13px; }
+.resume-links a:focus-visible { outline: 2px solid var(--theme); outline-offset: 3px; }
+.pub-item[id] { scroll-margin-top: 76px; }
+.pub-thumb img.metaprogramming-figure { object-fit: contain; background: #faf8f4; }
+
 /* ---------- Section ---------- */
 .section { padding: 1.5rem 0; }
 
