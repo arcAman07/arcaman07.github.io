@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Taste in the Age of AI Agents | Aman Sharma</title>
+    <meta name="description" content="AI agents can now run research end to end. How early-career researchers should read, pick hard problems and build research taste by working with agents rather than against them.">
+    <link rel="canonical" href="https://arcaman07.github.io/blog/research-taste-ai-agents.html">
+    <meta property="og:title" content="Research Taste in the Age of AI Agents">
+    <meta property="og:description" content="AI agents can now run research end to end. How early-career researchers should read, pick hard problems and build research taste by working with agents rather than against them.">
+    <meta property="og:type" content="article">
+    <meta property="og:image" content="https://arcaman07.github.io/blog/figures/research-taste-card.png">
+    <meta property="og:url" content="https://arcaman07.github.io/blog/research-taste-ai-agents.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@arcaman07">
+    <meta name="twitter:title" content="Research Taste in the Age of AI Agents">
+    <meta name="twitter:description" content="AI agents can now run research end to end. How early-career researchers should read, pick hard problems and build research taste by working with agents rather than against them.">
+    <meta name="twitter:image" content="https://arcaman07.github.io/blog/figures/research-taste-card.png">
+    <link rel="icon" type="image/x-icon" href="../assets/img/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/blog-post.css">
+    <style>
+        .post-fig { margin: 2.4rem 0; }
+        .post-fig svg { display: block; width: 100%; height: auto; }
+        .post-fig .chart-caption { margin-top: 0.6rem; }
+        @media (max-width: 640px) {
+            .post-fig .fig-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .post-fig .fig-scroll svg { min-width: 600px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="progress"></div>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="nav-brand">Aman Sharma</a>
+            <div style="display:flex;align-items:center;gap:0;">
+                <ul class="nav-menu" id="navMenu">
+                    <li><a href="../index.html">About</a></li>
+                    <li><a href="../blog.html" class="active">Blog</a></li>
+                    <li><a href="../publications.html">Research</a></li>
+                    <li><a href="../projects.html">Projects</a></li>
+                </ul>
+                <div class="nav-right">
+                    <button id="light-toggle" aria-label="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+                    <button class="nav-toggle" id="menuToggle" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="post-body">
+
+            <a href="../blog.html" class="back-link">
+                <i class="fa-solid fa-arrow-left" style="font-size:11px;"></i> Back to Blog
+            </a>
+
+            <div class="post-hero">
+                <div class="post-hero-meta">
+                    <span><i class="fa-solid fa-calendar" style="font-size:10px;"></i> October 2026</span>
+                    <span class="sep">&middot;</span>
+                    <span><i class="fa-solid fa-clock" style="font-size:10px;"></i> 11 min read</span>
+                    <span class="sep">&middot;</span>
+                    <span><i class="fa-solid fa-file-lines" style="font-size:10px;"></i> Essay</span>
+                </div>
+                <h1>Research Taste in the Age of AI Agents</h1>
+                <p class="post-subtitle">AI agents can now search the literature, run experiments and write up papers on their own, and a lot of early-career researchers are asking whether research still needs them. I think it does, but the skills that matter have shifted. This is how I read, pick problems and build research taste now, working with agents rather than against them.</p>
+                <div class="post-tags-hero">
+                    <a href="#">research-taste</a>
+                    <a href="#">ai-agents</a>
+                    <a href="#">early-career</a>
+                    <a href="#">academia</a>
+                </div>
+            </div>
+
+            <div class="post-content">
+
+<p>
+The last few months in AI have moved so fast that it is hard to keep track of everything. In September, OpenAI announced that its agents had <a href="https://www.quantamagazine.org/ai-has-solved-one-of-maths-1-million-millennium-prize-problems-20260908/" target="_blank">found a blowup solution to the 3D Navier-Stokes equations</a>, a result tied to one of the Millennium Prize Problems. Then in early October, OpenAI <a href="https://www.nature.com/articles/d41586-026-03196-8" target="_blank">posted more than 700 AI-generated math preprints</a> in one go, which one physicist called a "slopocalypse". Every few weeks a new model comes out that feels like another step on the path towards recursive self-improvement, and the breakthroughs keep arriving faster than most of us can even read about them.
+</p>
+
+<div class="post-fig">
+<div class="fig-scroll">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" width="100%" role="img" aria-label="AI math milestones went from a year apart to two weeks apart" preserveAspectRatio="xMidYMid meet" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <style>
+    svg { --fig-text: var(--text, #1a1a1a); --fig-accent: var(--theme, #E77500); }
+    .ttl { fill: var(--fig-text); font-weight: 600; }
+    .mut { fill: var(--fig-text); opacity: .6; }
+    .ink { fill: var(--fig-text); }
+    .nm  { fill: var(--fig-text); font-weight: 600; }
+    .acc { fill: var(--fig-accent); }
+    .grid { stroke: var(--fig-text); stroke-opacity: .12; stroke-width: 1; }
+    .axis { stroke: var(--fig-text); stroke-opacity: .35; stroke-width: 1.2; }
+    .edge { stroke: var(--fig-text); stroke-opacity: .4; stroke-width: 1.25; fill: none; }
+    .muted { fill: var(--fig-text); fill-opacity: .22; }
+    .box { fill: none; stroke: var(--fig-text); stroke-opacity: .4; stroke-width: 1.25; }
+    .box-acc { fill: var(--fig-accent); fill-opacity: .12; stroke: var(--fig-accent); stroke-width: 2; }
+    .box-tint { fill: var(--fig-text); fill-opacity: .06; stroke: var(--fig-text); stroke-opacity: .4; stroke-width: 1.25; }
+    .arrowhead { fill: var(--fig-text); fill-opacity: .45; }
+  </style>
+  <text class="ttl" x="24" y="28" font-size="15.5">AI math milestones went from a year apart to two weeks apart</text>
+  <text class="mut" x="24" y="48" font-size="11.5">Selected announcements, July 2024 to October 2026</text>
+  <line class="grid" x1="290.0" x2="290.0" y1="86" y2="318"/>
+  <text class="mut" x="290.0" y="76" font-size="11.5" text-anchor="middle">Jul 2024</text>
+  <line class="grid" x1="367.7" x2="367.7" y1="86" y2="318"/>
+  <text class="mut" x="367.7" y="76" font-size="11.5" text-anchor="middle">Jan 2025</text>
+  <line class="grid" x1="444.0" x2="444.0" y1="86" y2="318"/>
+  <text class="mut" x="444.0" y="76" font-size="11.5" text-anchor="middle">Jul 2025</text>
+  <line class="grid" x1="521.7" x2="521.7" y1="86" y2="318"/>
+  <text class="mut" x="521.7" y="76" font-size="11.5" text-anchor="middle">Jan 2026</text>
+  <line class="grid" x1="598.1" x2="598.1" y1="86" y2="318"/>
+  <text class="mut" x="598.1" y="76" font-size="11.5" text-anchor="middle">Jul 2026</text>
+  <line class="axis" x1="290" x2="650" y1="86" y2="86"/>
+  <line class="grid" x1="290" x2="300.1" y1="110" y2="110"/>
+  <path class="muted" d="M300.1 103l7 7l-7 7l-7 -7z"/>
+  <text class="mut" x="313.1" y="114" font-size="11.5">Jul 25, 2024</text>
+  <text class="ink" x="24" y="114" font-size="13">IMO silver (AlphaProof)</text>
+  <line class="grid" x1="290" x2="452.5" y1="142" y2="142"/>
+  <path class="muted" d="M452.5 135l7 7l-7 7l-7 -7z"/>
+  <text class="mut" x="465.5" y="146" font-size="11.5">Jul 21, 2025</text>
+  <text class="ink" x="24" y="146" font-size="13">IMO gold (Gemini Deep Think)</text>
+  <line class="grid" x1="290" x2="523.0" y1="174" y2="174"/>
+  <path class="muted" d="M523.0 167l7 7l-7 7l-7 -7z"/>
+  <text class="mut" x="536.0" y="178" font-size="11.5">Jan 4, 2026</text>
+  <text class="ink" x="24" y="178" font-size="13">First Erdős problem solved</text>
+  <line class="grid" x1="290" x2="580.4" y1="206" y2="206"/>
+  <path class="muted" d="M580.4 199l7 7l-7 7l-7 -7z"/>
+  <text class="mut" x="593.4" y="210" font-size="11.5">May 20, 2026</text>
+  <text class="ink" x="24" y="210" font-size="13">Unit distance conjecture disproved</text>
+  <line class="grid" x1="290" x2="627.2" y1="238" y2="238"/>
+  <path class="acc" d="M627.2 231l7 7l-7 7l-7 -7z"/>
+  <text class="ink" x="640.2" y="242" font-size="11.5" font-weight="600">Sep 8, 2026</text>
+  <text class="nm" x="24" y="242" font-size="13">Navier-Stokes blowup claim</text>
+  <line class="grid" x1="290" x2="632.7" y1="270" y2="270"/>
+  <path class="acc" d="M632.7 263l7 7l-7 7l-7 -7z"/>
+  <text class="ink" x="645.7" y="274" font-size="11.5" font-weight="600">Sep 21, 2026</text>
+  <text class="nm" x="24" y="274" font-size="13">100+ more open problems</text>
+  <line class="grid" x1="290" x2="639.0" y1="302" y2="302"/>
+  <path class="acc" d="M639.0 295l7 7l-7 7l-7 -7z"/>
+  <text class="ink" x="652.0" y="306" font-size="11.5" font-weight="600">Oct 6, 2026</text>
+  <text class="nm" x="24" y="306" font-size="13">700+ AI math preprints</text>
+</svg>
+</div>
+<div class="chart-caption">Sources are Semafor, Google DeepMind, Quanta Magazine, TechCrunch and Nature, linked in the references below.</div>
+</div>
+
+<p>
+So it is no surprise that there is a lot of doom around academia right now. When agents can search the literature, run experiments and write up full papers on their own, people naturally start asking whether there is any point in doing a PhD anymore, or in becoming a researcher at all, if a system can do most of the work faster than you can.
+</p>
+
+<p>
+And yet some of the most exciting stories this year point the other way. Earlier this month Pavel Rabtsevich, a researcher working on his own without a lab or funding behind him, <a href="https://gist.github.com/MrBoostie/b7a34b9ec96fbfb37e8fd250ba6debba" target="_blank">found a promising new planet candidate</a> hiding in seven years of NASA's TESS telescope data. He used Claude Code with Opus 5.5 and Fable 5.1 to write more than a thousand scripts that downloaded the data and searched and vetted every signal, and NASA has since <a href="https://huggingnews.com/ai/update-researcher-finds-10-more-exoplanets-using-opus-55-ai-16f51255" target="_blank">approved telescope time</a> to check what he found. The planet still has to be confirmed, but what got him this far was not an institution or a big budget. It was a good taste for data and the curiosity to keep asking the next question while agents did the heavy lifting.
+</p>
+
+<p>
+Lately a lot of juniors and early-career researchers have been reaching out to me with some version of the same question, which is how do you even do research in a world of automated AI agents and systems. I understand where it comes from. When I started doing research full time a year ago, AI tools were already really useful for coding and for the literature survey, but they were nowhere close to fully automated systems that could run a research project end to end. The real shift came after Anthropic released Claude Fable 5 in June this year. Since then the way I research, the way I choose questions and the timelines I work on have changed far more than I expected.
+</p>
+
+<p>
+When I joined Lossfunk as a research engineer last year, my days were pretty simple. I would go into the lab, read papers and spend a lot of time discussing them with my peers, talking through what we found interesting, what seemed to be missing and where an idea could go next. Looking back, those conversations mattered as much as the reading itself, because talking things through with people who think differently from you is how half-formed thoughts turn into ideas worth exploring, and that is where a lot of my early thinking about research really took shape.
+</p>
+
+<p>
+My view is that research hasn't become any less valuable, but the skills that matter have shifted. The answer is not to resist AI agents, and it is not to hand everything over to them either. It is to embrace them as collaborators, spend real time understanding what they give you and do research with them rather than against them. This post is my attempt to share what I have learned about that so far, mostly by getting things wrong along the way.
+</p>
+
+<h2>What changed this year</h2>
+
+<p>
+When I started, AI tools were mostly assistants that gave me a faster search or a quick summary of a paper I had already found. Today agents can run the whole loop on their own. They find and read the papers, write the code, run the experiments and draft the write-up.
+</p>
+
+<p>
+That has changed how I spend my time. I collect far fewer papers and spend much more time judging what is actually worth trusting. The timelines have also compressed a lot, so an idea that felt novel at the start of a project might not be novel anymore by the time you finish it.
+</p>
+
+<p>
+The biggest change is in which questions are worth picking. With a proper harness around them, AI systems can now automate a lot of the low-hanging fruit in research, like quick ablations and incremental follow-up experiments that an agent can grind through on its own. So the real work for a researcher has moved to finding an important research question with lots of possibilities in it. That means something open enough to explore in many directions and hard enough that it needs your judgment at every step.
+</p>
+
+<h2>The literature survey is where it hurts most</h2>
+
+<p>
+The stage that has changed the most is the literature survey. There is now far more content coming in than any researcher has the time to read, understand and actually absorb, and a good part of it is AI-generated research and slop papers that look polished but don't add much. The tricky part is that a weak paper takes just as long to read as a good one, and it is getting harder to tell them apart from the outside.
+</p>
+
+<p>
+To put that in numbers, NeurIPS alone went from about 2,400 main track submissions in 2016 to more than 30,000 in 2026. And when the organizers checked this year's position paper track, <a href="https://blog.neurips.cc/2026/06/02/ai-generated-papers-in-the-neurips-2026-position-paper-track/" target="_blank">273 of the 969 submissions, about 28%,</a> came back flagged as substantially AI-written.
+</p>
+
+<div class="post-fig">
+<div class="fig-scroll">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" width="100%" role="img" aria-label="NeurIPS submissions grew nearly 13x in a decade" preserveAspectRatio="xMidYMid meet" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <style>
+    svg { --fig-text: var(--text, #1a1a1a); --fig-accent: var(--theme, #E77500); }
+    .ttl { fill: var(--fig-text); font-weight: 600; }
+    .mut { fill: var(--fig-text); opacity: .6; }
+    .ink { fill: var(--fig-text); }
+    .nm  { fill: var(--fig-text); font-weight: 600; }
+    .acc { fill: var(--fig-accent); }
+    .grid { stroke: var(--fig-text); stroke-opacity: .12; stroke-width: 1; }
+    .axis { stroke: var(--fig-text); stroke-opacity: .35; stroke-width: 1.2; }
+    .edge { stroke: var(--fig-text); stroke-opacity: .4; stroke-width: 1.25; fill: none; }
+    .muted { fill: var(--fig-text); fill-opacity: .22; }
+    .box { fill: none; stroke: var(--fig-text); stroke-opacity: .4; stroke-width: 1.25; }
+    .box-acc { fill: var(--fig-accent); fill-opacity: .12; stroke: var(--fig-accent); stroke-width: 2; }
+    .box-tint { fill: var(--fig-text); fill-opacity: .06; stroke: var(--fig-text); stroke-opacity: .4; stroke-width: 1.25; }
+    .arrowhead { fill: var(--fig-text); fill-opacity: .45; }
+  </style>
+  <text class="ttl" x="40" y="30" font-size="16">NeurIPS submissions grew nearly 13x in a decade</text>
+  <text class="mut" x="40" y="52" font-size="12">Main track submissions, 2,406 in 2016 to 30,709 in 2026</text>
+  <rect class="muted" x="72.0" y="284.3" width="36" height="15.7" rx="2"><title>2016: 2,406 submissions</title></rect>
+  <text class="mut" x="90.0" y="318" font-size="12" text-anchor="middle">2016</text>
+  <rect class="muted" x="132.0" y="278.9" width="36" height="21.1" rx="2"><title>2017: 3,240 submissions</title></rect>
+  <text class="mut" x="150.0" y="318" font-size="12" text-anchor="middle">2017</text>
+  <rect class="muted" x="192.0" y="268.4" width="36" height="31.6" rx="2"><title>2018: 4,856 submissions</title></rect>
+  <text class="mut" x="210.0" y="318" font-size="12" text-anchor="middle">2018</text>
+  <rect class="muted" x="252.0" y="256.1" width="36" height="43.9" rx="2"><title>2019: 6,743 submissions</title></rect>
+  <text class="mut" x="270.0" y="318" font-size="12" text-anchor="middle">2019</text>
+  <rect class="muted" x="312.0" y="238.3" width="36" height="61.7" rx="2"><title>2020: 9,467 submissions</title></rect>
+  <text class="mut" x="330.0" y="318" font-size="12" text-anchor="middle">2020</text>
+  <rect class="muted" x="372.0" y="240.6" width="36" height="59.4" rx="2"><title>2021: 9,122 submissions</title></rect>
+  <text class="mut" x="390.0" y="318" font-size="12" text-anchor="middle">2021</text>
+  <rect class="muted" x="432.0" y="232.2" width="36" height="67.8" rx="2"><title>2022: 10,411 submissions</title></rect>
+  <text class="mut" x="450.0" y="318" font-size="12" text-anchor="middle">2022</text>
+  <rect class="muted" x="492.0" y="219.6" width="36" height="80.4" rx="2"><title>2023: 12,343 submissions</title></rect>
+  <text class="mut" x="510.0" y="318" font-size="12" text-anchor="middle">2023</text>
+  <rect class="muted" x="552.0" y="197.9" width="36" height="102.1" rx="2"><title>2024: 15,671 submissions</title></rect>
+  <text class="mut" x="570.0" y="318" font-size="12" text-anchor="middle">2024</text>
+  <rect class="muted" x="612.0" y="159.5" width="36" height="140.5" rx="2"><title>2025: 21,575 submissions</title></rect>
+  <text class="mut" x="630.0" y="318" font-size="12" text-anchor="middle">2025</text>
+  <rect class="acc" x="672.0" y="100.0" width="36" height="200.0" rx="2"><title>2026: 30,709 submissions</title></rect>
+  <text class="mut" x="690.0" y="318" font-size="12" text-anchor="middle">2026</text>
+  <text class="ink" x="90.0" y="276.3" font-size="12" text-anchor="middle">2,406</text>
+  <text class="nm" x="690.0" y="92.0" font-size="12" text-anchor="middle">30,709</text>
+  <line class="axis" x1="60" x2="720" y1="300" y2="300"/>
+</svg>
+</div>
+<div class="chart-caption">NeurIPS main track statistics via OpenAccept and CSConfStats, 2016 to 2026.</div>
+</div>
+
+<p>
+The old approach of reading everything relevant and then finding the gap simply doesn't work when the pile of everything grows faster than you can read it. So I feel the skill now isn't about reading more, it is about deciding what deserves your attention and what you can safely skip.
+</p>
+
+<h2>How I decide what to read</h2>
+
+<p>
+I don't try to read everything anymore. Instead I go through a few stages, where each one takes a bit more time than the one before it.
+</p>
+
+<ol>
+<li>Almost every paper now comes with a research thread on X or a short post, so I start there and ask myself whether the problem actually sticks with me, and whether it is something unique and useful or I just got attracted to a catchy idea.</li>
+<li>If it does stick, I pass the paper through an LLM and ask for the abstract, the main takeaways and where the idea could go further, which gives me a good overview in a few minutes.</li>
+<li>If I still find it interesting after that, I sit down and do a proper deep read of the paper from start to end.</li>
+</ol>
+
+<div class="post-fig">
+<div class="fig-scroll">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 260" width="100%" role="img" aria-label="Most papers stop at the thread, only a few earn a deep read" preserveAspectRatio="xMidYMid meet" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <style>
+    svg { --fig-text: var(--text, #1a1a1a); --fig-accent: var(--theme, #E77500); }
+    .ttl { fill: var(--fig-text); font-weight: 600; }
+    .mut { fill: var(--fig-text); opacity: .6; }
+    .ink { fill: var(--fig-text); }
+    .nm  { fill: var(--fig-text); font-weight: 600; }
+    .acc { fill: var(--fig-accent); }
+    .grid { stroke: var(--fig-text); stroke-opacity: .12; stroke-width: 1; }
+    .axis { stroke: var(--fig-text); stroke-opacity: .35; stroke-width: 1.2; }
+    .edge { stroke: var(--fig-text); stroke-opacity: .4; stroke-width: 1.25; fill: none; }
+    .muted { fill: var(--fig-text); fill-opacity: .22; }
+    .box { fill: none; stroke: var(--fig-text); stroke-opacity: .4; stroke-width: 1.25; }
+    .box-acc { fill: var(--fig-accent); fill-opacity: .12; stroke: var(--fig-accent); stroke-width: 2; }
+    .box-tint { fill: var(--fig-text); fill-opacity: .06; stroke: var(--fig-text); stroke-opacity: .4; stroke-width: 1.25; }
+    .arrowhead { fill: var(--fig-text); fill-opacity: .45; }
+  </style>
+  <defs><marker id="rd-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="arrowhead" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="ttl" x="30" y="30" font-size="15.5">Most papers stop at the thread, only a few earn a deep read</text>
+  <path class="edge" d="M210.0 100H290.0" marker-end="url(#rd-arrow)"/>
+  <path class="edge" d="M470.0 100H550.0" marker-end="url(#rd-arrow)"/>
+  <path class="edge" d="M120 128.0V192" marker-end="url(#rd-arrow)"/>
+  <path class="edge" d="M380 128.0V192" marker-end="url(#rd-arrow)"/>
+  <rect class="box" x="30.0" y="72.0" width="180" height="56" rx="8"/>
+  <text class="nm" x="120" y="96" font-size="13" text-anchor="middle">Read the thread</text>
+  <text class="mut" x="120" y="114" font-size="11.5" text-anchor="middle">Does the problem stick?</text>
+  <rect class="box" x="290.0" y="72.0" width="180" height="56" rx="8"/>
+  <text class="nm" x="380" y="96" font-size="13" text-anchor="middle">LLM pass</text>
+  <text class="mut" x="380" y="114" font-size="11.5" text-anchor="middle">Abstract and takeaways</text>
+  <rect class="box-acc" x="550.0" y="72.0" width="180" height="56" rx="8"/>
+  <text class="nm" x="640" y="96" font-size="13" text-anchor="middle">Deep read</text>
+  <text class="ink" x="640" y="114" font-size="11.5" text-anchor="middle">Start to end, properly</text>
+  <rect class="box-tint" x="30" y="192" width="440" height="44" rx="8"/>
+  <text class="ink" x="250.0" y="219" font-size="13" text-anchor="middle">Skip it and move on</text>
+  <text class="mut" x="250.0" y="62.0" font-size="11.5" text-anchor="middle">sticks</text>
+  <text class="mut" x="510.0" y="62.0" font-size="11.5" text-anchor="middle">still interesting</text>
+  <text class="mut" x="128" y="164.0" font-size="11.5">no</text>
+  <text class="mut" x="388" y="164.0" font-size="11.5">no</text>
+</svg>
+</div>
+<div class="chart-caption">How I filter papers, in three stages.</div>
+</div>
+
+<p>
+Most papers stop at the first stage, and that is completely fine, because it means the few that make it to the deep read actually get the time and focus they deserve.
+</p>
+
+<h2>Spend your time on the hard problems</h2>
+
+<p>
+With research getting automated and slop piling up everywhere, I feel focus has become the most valuable thing a researcher has. Agents have made it cheap to produce papers, but they haven't made it any cheaper to produce important ones, so it is really important to put your time into the tough, ambitious and useful problems rather than just getting more papers out.
+</p>
+
+<p>
+To me, ambitious doesn't mean making a small tweak to an existing algorithm or approach. Take LLM harnesses, which are really popular right now. Building yet another harness or adding one more feature on top of an existing one is the easy move, and the harder and more interesting move is to look one level deeper at the problems that harnesses are trying to work around. There are a few of these that I keep coming back to.
+</p>
+
+<ul>
+<li>How models can reason over long horizons, and whether they can build efficient abstractions or even world models while working through long tasks</li>
+<li>How to solve the context compaction problem, particularly for small LLMs</li>
+<li>Whether we can disentangle the knowledge stored in a model from the genuine reasoning it has actually learned</li>
+</ul>
+
+<p>
+None of these has a clean answer yet, and some might stay a work in progress for a long time, but that is exactly what makes them worth your time. They give you real hypotheses to test, and you can use agents to go through related papers, work out possible ideas and run the experiments. If it works out, you have helped the community make progress on a problem that really matters, and if it doesn't, you have still learned a lot and built a deeper intuition by trying to solve something difficult and cool.
+</p>
+
+<h2>Taste comes from questions, not papers</h2>
+
+<p>
+Picking the right problem needs research taste, and there isn't really a shortcut to building it. It comes from reading papers, going through the relevant literature and slowly understanding why certain problems matter more than others. In my first couple of months, most of my time went into reading and discussing papers before I really understood the issues that are most important in AI, and I still think that time was one of the best investments I made.
+</p>
+
+<p>
+Taste builds up slowly and in layers. You read the initial papers on a problem, then the follow-ups that push on them, and somewhere along the way you start running your own experiments to see what actually holds up. Each of those steps adds a little intuition about what works and what is worth chasing, and over time that intuition turns into research taste, which is really just a sense for which problems are the most important ones to attempt.
+</p>
+
+<p>
+For me one such example was EsoLang-Bench. I kept wondering whether models that solve coding problems are actually generalizing or just reproducing what they have memorized, so I used esoteric programming languages that almost nobody writes code in as a way to tell the two apart.
+</p>
+
+<p>
+The point isn't the paper that came out of it. It is learning to ask important research questions, building intuition around them and working on them wholeheartedly whether the research pans out or not, because even the experiments that fail end up deepening your understanding of the problem.
+</p>
+
+<h2>Work with agents, not against them</h2>
+
+<p>
+This year so much has changed, with AI agents now coming up with research questions to investigate, doing all the coding and testing and even writing out the paper. It is easy to react to this by either ignoring agents or fearing them, and I think both are a mistake. The researchers who will do the best work are the ones who learn to collaborate with these systems, treating them as a partner that is fast and tireless but still needs a human who understands the problem and can judge what comes back.
+</p>
+
+<p>
+Say a paper on context compaction for small models makes it through all three of your reading stages. An agent can help you understand it much more deeply than a first read would, by questioning its assumptions and results along with you. It can help you come up with future work questions that build on top of it and turn your rough hunches into hypotheses you can actually test, and it can write the code for the training or inference experiments, which saves a lot of time.
+</p>
+
+<h2>Own everything the agent gives you</h2>
+
+<p>
+The catch is that you have to use agents responsibly, which means checking every output you get, going through the code, debugging it and making sure you actually understand what it is doing.
+</p>
+
+<p>
+That work is how you develop intuition and taste in your own research, and it is what helps you in the long run. Without it you end up putting out work that you haven't really understood or done yourself, which can become a real problem for your credibility as a researcher. It also takes away the very thing that makes you better over time, which is the ability to identify the tough problems and come up with solutions for them.
+</p>
+
+<div class="post-fig">
+<div class="fig-scroll">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 340" width="100%" role="img" aria-label="Agents speed up the loop, but the question and the check stay yours" preserveAspectRatio="xMidYMid meet" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <style>
+    svg { --fig-text: var(--text, #1a1a1a); --fig-accent: var(--theme, #E77500); }
+    .ttl { fill: var(--fig-text); font-weight: 600; }
+    .mut { fill: var(--fig-text); opacity: .6; }
+    .ink { fill: var(--fig-text); }
+    .nm  { fill: var(--fig-text); font-weight: 600; }
+    .acc { fill: var(--fig-accent); }
+    .grid { stroke: var(--fig-text); stroke-opacity: .12; stroke-width: 1; }
+    .axis { stroke: var(--fig-text); stroke-opacity: .35; stroke-width: 1.2; }
+    .edge { stroke: var(--fig-text); stroke-opacity: .4; stroke-width: 1.25; fill: none; }
+    .muted { fill: var(--fig-text); fill-opacity: .22; }
+    .box { fill: none; stroke: var(--fig-text); stroke-opacity: .4; stroke-width: 1.25; }
+    .box-acc { fill: var(--fig-accent); fill-opacity: .12; stroke: var(--fig-accent); stroke-width: 2; }
+    .box-tint { fill: var(--fig-text); fill-opacity: .06; stroke: var(--fig-text); stroke-opacity: .4; stroke-width: 1.25; }
+    .arrowhead { fill: var(--fig-text); fill-opacity: .45; }
+  </style>
+  <defs><marker id="lp-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="arrowhead" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="ttl" x="40" y="34" font-size="15.5">Agents speed up the loop, but the question and the check stay yours</text>
+  <path class="edge" d="M240.0 110H280.0" marker-end="url(#lp-arrow)"/>
+  <path class="edge" d="M480.0 110H520.0" marker-end="url(#lp-arrow)"/>
+  <path class="edge" d="M620 138.0V222.0" marker-end="url(#lp-arrow)"/>
+  <path class="edge" d="M520.0 250H480.0" marker-end="url(#lp-arrow)"/>
+  <path class="edge" d="M280.0 250H240.0" marker-end="url(#lp-arrow)"/>
+  <path class="edge" d="M140 222.0V138.0" marker-end="url(#lp-arrow)"/>
+  <rect class="box-acc" x="40.0" y="82.0" width="200" height="56" rx="8"/>
+  <text class="nm" x="140" y="106" font-size="13" text-anchor="middle">Ask a hard question</text>
+  <text class="ink" x="140" y="124" font-size="11.5" text-anchor="middle">One you really care about</text>
+  <rect class="box" x="280.0" y="82.0" width="200" height="56" rx="8"/>
+  <text class="nm" x="380" y="106" font-size="13" text-anchor="middle">Read and discuss</text>
+  <text class="mut" x="380" y="124" font-size="11.5" text-anchor="middle">Papers, threads, peers</text>
+  <rect class="box" x="520.0" y="82.0" width="200" height="56" rx="8"/>
+  <text class="nm" x="620" y="106" font-size="13" text-anchor="middle">Form hypotheses</text>
+  <text class="mut" x="620" y="124" font-size="11.5" text-anchor="middle">Turn hunches into tests</text>
+  <rect class="box-tint" x="520.0" y="222.0" width="200" height="56" rx="8"/>
+  <text class="nm" x="620" y="246" font-size="13" text-anchor="middle">Agents build and run</text>
+  <text class="mut" x="620" y="264" font-size="11.5" text-anchor="middle">Code, training, inference</text>
+  <rect class="box-acc" x="280.0" y="222.0" width="200" height="56" rx="8"/>
+  <text class="nm" x="380" y="246" font-size="13" text-anchor="middle">Verify and debug</text>
+  <text class="ink" x="380" y="264" font-size="11.5" text-anchor="middle">Read every line they return</text>
+  <rect class="box" x="40.0" y="222.0" width="200" height="56" rx="8"/>
+  <text class="nm" x="140" y="246" font-size="13" text-anchor="middle">Share in public</text>
+  <text class="mut" x="140" y="264" font-size="11.5" text-anchor="middle">Posts, threads, discussion</text>
+  <text class="mut" x="150" y="184.0" font-size="11.5">new questions</text>
+  <rect class="box-acc" x="40" y="304" width="14" height="14" rx="3"/>
+  <text class="mut" x="62" y="315" font-size="11.5">never hand these over</text>
+  <rect class="box-tint" x="240" y="304" width="14" height="14" rx="3"/>
+  <text class="mut" x="262" y="315" font-size="11.5">hand this to agents, then check it</text>
+</svg>
+</div>
+<div class="chart-caption">The research loop I follow, in six steps.</div>
+</div>
+
+<h2>Share your work in public</h2>
+
+<p>
+Research doesn't end when the paper is out, and I feel sharing your work in public through blog posts, threads and discussions is just as essential as doing the work itself.
+</p>
+
+<p>
+The same threads I use to filter papers are how other people will end up finding yours. Putting your work out there gets you feedback early, helps surface the flaws you might have missed and connects you with people who are working on the same problems. It also sharpens your own thinking, because if you can't explain an idea plainly to someone else, you probably don't understand it well enough yet. And in a feed full of slop, a clear explanation from the person who actually did the work really stands out. It doesn't have to start online either, since those lab discussions with my peers were really the first version of this, and sharing in public is just the same habit at a bigger scale.
+</p>
+
+<h2>The fun part is still yours</h2>
+
+<p>
+If I were starting again today, this is roughly what I would do.
+</p>
+
+<ol>
+<li>Spend the first few months reading deeply and understanding which problems in the field really matter.</li>
+<li>Filter papers hard, starting with the thread, then an LLM pass, and only doing a deep read for the ones that stick with you.</li>
+<li>Pick one hard question you care about and commit to it, even if it might not pan out.</li>
+<li>Use agents to question papers, test ideas and write your experiment code.</li>
+<li>Review, debug and understand everything they hand back to you.</li>
+<li>Share what you learn in public through blog posts, threads and discussions.</li>
+</ol>
+
+<p>
+Agents can take over the summaries, the boilerplate code and the first draft, but don't hand over the part where you choose which question deserves your year and understand your answer well enough to stand behind it. The future of research is humans and AI working together, so embrace these systems, spend time with what they produce and keep yourself in the loop. That is the whole fun of research, and agents can help you get there faster as long as you don't use them to skip it.
+</p>
+
+<h2>References</h2>
+
+<ol class="references-list" style="font-size:14px;">
+<li>Semafor, <a href="https://www.semafor.com/article/07/25/2024/google-deepminds-ai-reaches-milestone-in-international-mathematical-olympiad" target="_blank">"Google DeepMind AI system reaches milestone in global math contest"</a>, 25 July 2024 (AlphaProof, IMO silver).</li>
+<li>Google DeepMind, <a href="https://deepmind.google/discover/blog/advanced-version-of-gemini-with-deep-think-officially-achieves-gold-medal-standard-at-the-international-mathematical-olympiad" target="_blank">"Advanced version of Gemini with Deep Think officially achieves gold-medal standard at the International Mathematical Olympiad"</a>, 21 July 2025.</li>
+<li>Quanta Magazine, <a href="https://www.quantamagazine.org/why-the-legendary-erdos-problems-are-falling-to-ai-20260803/" target="_blank">"Why the legendary Erdős problems are falling to AI"</a>, 3 August 2026.</li>
+<li>Quanta Magazine, <a href="https://www.quantamagazine.org/ai-has-solved-one-of-maths-1-million-millennium-prize-problems-20260908/" target="_blank">"AI has solved one of math's $1 million Millennium Prize Problems"</a>, 8 September 2026.</li>
+<li>TechCrunch, <a href="https://techcrunch.com/2026/09/21/openai-forms-math-advisory-group-as-its-ai-resolves-more-than-100-open-problems/" target="_blank">"OpenAI forms math advisory group as its AI resolves more than 100 open problems"</a>, 21 September 2026.</li>
+<li>Nature, <a href="https://www.nature.com/articles/d41586-026-03196-8" target="_blank">"OpenAI posts 700 maths preprints online"</a>, 7 October 2026.</li>
+<li>Tech Brew, <a href="https://www.techbrew.com/issues/anthropics-fabled-release" target="_blank">"Anthropic's fabled release"</a>, June 2026 (Claude Fable 5).</li>
+<li>Pavel Rabtsevich, <a href="https://gist.github.com/MrBoostie/b7a34b9ec96fbfb37e8fd250ba6debba" target="_blank">"AI-assisted TESS exoplanet candidate TIC 4206066"</a>, October 2026.</li>
+<li>HuggingNews, <a href="https://huggingnews.com/ai/update-researcher-finds-10-more-exoplanets-using-opus-55-ai-16f51255" target="_blank">"Researcher finds 10 more exoplanets using Opus 5.5 AI"</a>, October 2026.</li>
+<li>NeurIPS Blog, <a href="https://blog.neurips.cc/2026/06/02/ai-generated-papers-in-the-neurips-2026-position-paper-track/" target="_blank">"AI-generated papers in the NeurIPS 2026 position paper track"</a>, 2 June 2026.</li>
+<li><a href="https://openaccept.org/c/ai/neurips/" target="_blank">OpenAccept</a> and <a href="https://csconfstats.xoveexu.com/conferences/neurips/" target="_blank">CSConfStats</a>, NeurIPS submission statistics, 2016 to 2026.</li>
+</ol>
+
+            </div>
+
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">&copy; 2026 Aman Sharma. All rights reserved.</div>
+    </footer>
+
+    <script src="../assets/js/main.js"></script>
+</body>
+</html>
